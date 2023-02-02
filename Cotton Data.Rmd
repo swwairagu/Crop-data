@@ -1,30 +1,76 @@
 ---
 title: "Cotton Data Analysis"
-output: html_document
-date: '2023-01-27'
-
+author: "Stephanie Wairagu"
+date: '2/1/2023'
+output: 
+  html_document: 
+    theme: cerulean
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Background
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+The aim of this research project is to explore and analyze cotton data provided by Matthew Starr of the Department of Crop and Soil Sciences at North Carolina State University to understand the effect of a plant-based amino acid biostimulant on cotton.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r cars}
-summary(cars)
+## Getting Started
+
+We'll use the **tidyverse** package for this analysis. If not previously installed, you can do so by running the following command in the console:
+
+```{r eval=FALSE}
+install.packages("tidyverse")
 ```
 
-## Including Plots
+Next, run the following library command to use the **tidyverse** package:
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r message=FALSE, eval=TRUE}
+library(tidyverse)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+# Data
+
+We can now read in our dataset using the following command:
+
+```{r load-data, message=FALSE, eval=TRUE}
+cotton_data <- read.csv("data/cotton-data.csv")
+```
+
+
+To view the data in your data viewer, run `View(cotton_data)` in the console. This will pop open a separate window with the data.
+
+
+This dataset has `r nrow(cotton_data)` rows and `r ncol(cotton_data)` columns.
+
+Each row represents a unique cotton plant observation. \
+Each column represents a variable. To get a list of the variables in the data frame, we can use the `names()` function:
+```{r}
+names(cotton_data)
+```
+
+
+## Exploratory Data Analysis
+
+We first create a visualization for the distribution of the **open boll weight** of cotton plants in both the control and treatment groups: 
+
+```{r}
+ggplot(cotton_data, aes(x = Open.Boll.Weight..g. ,
+                        fill = Treatment)) +
+  geom_histogram(bins = 15) +
+  labs(x = "Open boll weight (g)",
+       y = "Frequency",
+       title = "Distribution of the Open Boll Weight",
+       subtitle = "By Treatment Group") +
+  facet_wrap(~ Treatment) +
+  theme(legend.position = "none")
+```
+
+After examining the distribution of the open boll weight for the control and treatments groups, it was found that the distribution for the treatment group is *right-skewed* and the sample size is only 20 (not large enough for the Central Limit Theorem to take effect if using a t-test to compare the means of the two groups).
+
+
+
+
+
