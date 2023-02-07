@@ -30,7 +30,7 @@ A plant biostimulant is any substance or microorganism applied to plants that fo
 
 - Enhancing soil fertility, particularly by fostering the development of complementary soil microorganisms
 
-Plant-based protein hydrolysates (PHs) like **iQFORTE** have increased in popularity because of their potential to increase the germination, productivity and quality of a wide range of horticultural and agronomic crops. **iQFORTE** specifically is a natural extract whose active materials are oligopeptides and free amino acids obtained by enzymatic hydrolysis from highly energetic seeds that works to:
+Plant-based protein hydrolysates (PHs) like iQFORTE have increased in popularity because of their potential to increase the germination, productivity and quality of a wide range of horticultural and agronomic crops. iQFORTE specifically is a natural extract whose active materials are oligopeptides and free amino acids obtained by enzymatic hydrolysis from highly energetic seeds that works to:
 
 - Strengthen the root system
 
@@ -97,9 +97,32 @@ ggplot(cotton_data, aes(x = Open.Boll.Weight..g. ,
   theme(legend.position = "none")
 ```
 
-After examining the distribution of the open boll weight for the control and treatments groups, it was found that the distribution for the treatment group is *right-skewed* and the sample size is only 20 (not large enough for the Central Limit Theorem to take effect if using a t-test to compare the means of the two groups).
+```{r}
+# Check sample sizes
+cotton_data %>%
+  count(Treatment)
+```
 
 
-To address the non-normality of the treatment group, the natural log of each observation was taken in both groups, and the distribution of the log of each group was examined and a Shapiro-Wilk test for normality was conducted (where the null hypothesis is the data are normal). For the control group, the p-value for the Shapiro-Wilk test was 0.2255 and for the treatment group it was 0.7194. So we don’t have enough evidence to suggest the data are not normal, and we fail to reject the null hypothesis. It appears the log transformation has helped. The normal quantile plot for each group also seems to confirm this.
+After examining the distribution of the open boll weight for the control and treatments groups, it was found that the distribution for the iQFORTE treatment group is *right-skewed* and the sample size is only 20 (not large enough for the Central Limit Theorem to take effect if using a t-test to compare the means of the two groups).
+
+
+To address the non-normality of the treatment group, the natural log of each observation was taken in both groups, and the distribution of the log of each group was examined and a Shapiro-Wilk test for normality was conducted (where the null hypothesis is the data are normal).
+
+```{r shapiro-wilk-control}
+# Shapiro-Wilk normality test
+control_data_filtered <- cotton_data %>%
+  filter(Treatment == "Control")
+shapiro.test(control_data_filtered$Log.OpenBollWeight) 
+```
+
+```{r shapiro-wilk-IQ}
+# Shapiro-Wilk normality test
+IQ_data_filtered <- cotton_data %>%
+  filter(Treatment == "IQ")
+shapiro.test(IQ_data_filtered$Log.OpenBollWeight)
+```
+
+For the control group, the p-value for the Shapiro-Wilk test was 0.2255 and for the treatment group it was 0.7194. So we don’t have enough evidence to suggest the data are not normal, and we fail to reject the null hypothesis. It appears the log transformation has helped. The normal quantile plot for each group also seems to confirm this.
 
 
