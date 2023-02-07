@@ -13,18 +13,47 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Background
 
-The aim of this research project is to explore and analyze cotton data provided by Matthew Starr of the Department of Crop and Soil Sciences at North Carolina State University to understand the effect of a plant-based amino acid biostimulant on cotton.
+The aim of this research project is to explore and analyze cotton data provided by Matthew Starr of the Department of Crop and Soil Sciences at North Carolina State University to understand the effect of **iQFORTE**, a plant-based amino acid biostimulant on cotton. 
+
+
+A plant biostimulant is any substance or microorganism applied to plants that fosters plant growth and development throughout the crop life cycle from seed germination to planting maturity. Biostimulants achieve this in a number of demonstrated ways such as:
+
+- Improving the efficiency of the plant's metabolism to induce yield increases and enhanced crop quality
+
+- Increasing plant tolerance to and recovery from abiotic stresses
+
+- Facilitating nutrient assimilation, translocation, and use
+
+- Enhancing quality attributes of products, including sugar content, color, fruit seeding, etc.
+
+- Rendering water use more efficient
+
+- Enhancing soil fertility, particularly by fostering the development of complementary soil microorganisms
+
+Plant-based protein hydrolysates (PHs) like **iQFORTE** have increased in popularity because of their potential to increase the germination, productivity and quality of a wide range of horticultural and agronomic crops. **iQFORTE** specifically is a natural extract whose active materials are oligopeptides and free amino acids obtained by enzymatic hydrolysis from highly energetic seeds that works to:
+
+- Strengthen the root system
+
+- Enhance nutrients uptake, transport, and mobilization of minerals
+
+- Stimulate the vegetative growth
+
+- Enhance uniformity of flowering and fruiting
+
+- Improve the quality parameters of fruits
+
+- Prepare the plant against stress conditions
 
 
 ## Getting Started
 
-We'll use the **tidyverse** package for this analysis. If not previously installed, you can do so by running the following command in the console:
+We'll use the **tidyverse** package for this analysis. If not previously installed, you can do so by running the following *install.packages* command in the console:
 
 ```{r eval=FALSE}
 install.packages("tidyverse")
 ```
 
-Next, run the following library command to use the **tidyverse** package:
+Next, run the following *library* command to use the tidyverse package:
 
 ```{r message=FALSE, eval=TRUE}
 library(tidyverse)
@@ -45,7 +74,7 @@ To view the data in your data viewer, run `View(cotton_data)` in the console. Th
 
 This dataset has `r nrow(cotton_data)` rows and `r ncol(cotton_data)` columns.
 
-Each row represents a unique cotton plant observation. \
+Each row represents a unique cotton plant treatment observation. \
 Each column represents a variable. To get a list of the variables in the data frame, we can use the `names()` function:
 ```{r}
 names(cotton_data)
@@ -71,6 +100,6 @@ ggplot(cotton_data, aes(x = Open.Boll.Weight..g. ,
 After examining the distribution of the open boll weight for the control and treatments groups, it was found that the distribution for the treatment group is *right-skewed* and the sample size is only 20 (not large enough for the Central Limit Theorem to take effect if using a t-test to compare the means of the two groups).
 
 
-
+To address the non-normality of the treatment group, the natural log of each observation was taken in both groups, and the distribution of the log of each group was examined and a Shapiro-Wilk test for normality was conducted (where the null hypothesis is the data are normal). For the control group, the p-value for the Shapiro-Wilk test was 0.2255 and for the treatment group it was 0.7194. So we don’t have enough evidence to suggest the data are not normal, and we fail to reject the null hypothesis. It appears the log transformation has helped. The normal quantile plot for each group also seems to confirm this.
 
 

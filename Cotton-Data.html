@@ -367,16 +367,50 @@ pre code {
 <p>The aim of this research project is to explore and analyze cotton
 data provided by Matthew Starr of the Department of Crop and Soil
 Sciences at North Carolina State University to understand the effect of
-a plant-based amino acid biostimulant on cotton.</p>
+<strong>iQFORTE</strong>, a plant-based amino acid biostimulant on
+cotton.</p>
+<p>A plant biostimulant is any substance or microorganism applied to
+plants that fosters plant growth and development throughout the crop
+life cycle from seed germination to planting maturity. Biostimulants
+achieve this in a number of demonstrated ways such as:</p>
+<ul>
+<li><p>Improving the efficiency of the plant’s metabolism to induce
+yield increases and enhanced crop quality</p></li>
+<li><p>Increasing plant tolerance to and recovery from abiotic
+stresses</p></li>
+<li><p>Facilitating nutrient assimilation, translocation, and
+use</p></li>
+<li><p>Enhancing quality attributes of products, including sugar
+content, color, fruit seeding, etc.</p></li>
+<li><p>Rendering water use more efficient</p></li>
+<li><p>Enhancing soil fertility, particularly by fostering the
+development of complementary soil microorganisms</p></li>
+</ul>
+<p>Plant-based protein hydrolysates (PHs) like <strong>iQFORTE</strong>
+have increased in popularity because of their potential to increase the
+germination, productivity and quality of a wide range of horticultural
+and agronomic crops. <strong>iQFORTE</strong> specifically is a natural
+extract whose active materials are oligopeptides and free amino acids
+obtained by enzymatic hydrolysis from highly energetic seeds that works
+to:</p>
+<ul>
+<li><p>Strengthen the root system</p></li>
+<li><p>Enhance nutrients uptake, transport, and mobilization of
+minerals</p></li>
+<li><p>Stimulate the vegetative growth</p></li>
+<li><p>Enhance uniformity of flowering and fruiting</p></li>
+<li><p>Improve the quality parameters of fruits</p></li>
+<li><p>Prepare the plant against stress conditions</p></li>
+</ul>
 </div>
 <div id="getting-started" class="section level2">
 <h2>Getting Started</h2>
 <p>We’ll use the <strong>tidyverse</strong> package for this analysis.
 If not previously installed, you can do so by running the following
-command in the console:</p>
+<em>install.packages</em> command in the console:</p>
 <pre class="r"><code>install.packages(&quot;tidyverse&quot;)</code></pre>
-<p>Next, run the following library command to use the
-<strong>tidyverse</strong> package:</p>
+<p>Next, run the following <em>library</em> command to use the tidyverse
+package:</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
 </div>
 <div id="data" class="section level1">
@@ -387,7 +421,8 @@ command in the console:</p>
 <code>View(cotton_data)</code> in the console. This will pop open a
 separate window with the data.</p>
 <p>This dataset has 40 rows and 9 columns.</p>
-<p>Each row represents a unique cotton plant observation.<br />
+<p>Each row represents a unique cotton plant treatment
+observation.<br />
 Each column represents a variable. To get a list of the variables in the
 data frame, we can use the <code>names()</code> function:</p>
 <pre class="r"><code>names(cotton_data)</code></pre>
@@ -414,6 +449,15 @@ control and treatments groups, it was found that the distribution for
 the treatment group is <em>right-skewed</em> and the sample size is only
 20 (not large enough for the Central Limit Theorem to take effect if
 using a t-test to compare the means of the two groups).</p>
+<p>To address the non-normality of the treatment group, the natural log
+of each observation was taken in both groups, and the distribution of
+the log of each group was examined and a Shapiro-Wilk test for normality
+was conducted (where the null hypothesis is the data are normal). For
+the control group, the p-value for the Shapiro-Wilk test was 0.2255 and
+for the treatment group it was 0.7194. So we don’t have enough evidence
+to suggest the data are not normal, and we fail to reject the null
+hypothesis. It appears the log transformation has helped. The normal
+quantile plot for each group also seems to confirm this.</p>
 </div>
 </div>
 
