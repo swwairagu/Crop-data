@@ -53,7 +53,7 @@ We'll use the **tidyverse** package for this analysis. If not previously install
 install.packages("tidyverse")
 ```
 
-Next, run the following *library* command to use the tidyverse package:
+Next, run the following *library* command to load the tidyverse package:
 
 ```{r message=FALSE, eval=TRUE}
 library(tidyverse)
@@ -69,12 +69,12 @@ cotton_data <- read.csv("data/cotton-data.csv")
 ```
 
 
-To view the data in your data viewer, run `View(cotton_data)` in the console. This will pop open a separate window with the data.
+To view the data in the data viewer, run `View(cotton_data)` in the console. This will pop open a separate window with the data.
 
 
 This dataset has `r nrow(cotton_data)` rows and `r ncol(cotton_data)` columns.
 
-Each row represents a unique cotton plant treatment observation. \
+Each row represents a unique cotton plant, treatment observation. \
 Each column represents a variable. To get a list of the variables in the data frame, we can use the `names()` function:
 ```{r}
 names(cotton_data)
@@ -85,16 +85,16 @@ names(cotton_data)
 
 We first create a visualization for the distribution of the **open boll weight** of cotton plants in both the control and treatment groups: 
 
-```{r}
-ggplot(cotton_data, aes(x = Open.Boll.Weight..g. ,
-                        fill = Treatment)) +
-  geom_histogram(bins = 15) +
-  labs(x = "Open boll weight (g)",
-       y = "Frequency",
-       title = "Distribution of the Open Boll Weight",
-       subtitle = "By Treatment Group") +
-  facet_wrap(~ Treatment) +
-  theme(legend.position = "none")
+```{r hist-openbollweight}
+ggplot(cotton_data, aes(x = Open.Boll.Weight..g. ,             # add the data and specify x-axis
+                        fill = Treatment)) +                   # fill color based on treatment group
+  geom_histogram(bins = 15) +                                  # set appropriate histogram bin size 
+  labs(x = "Open boll weight (g)",                             # x-axis label
+       y = "Frequency",                                        # y-axis label
+       title = "Distribution of the Open Boll Weight",         # title of the graph
+       subtitle = "By Treatment Group") +                      # graph subtitle
+  facet_wrap(~ Treatment) +                                    # creates panes based on treatment group
+  theme(legend.position = "none")                              # removes legend
 ```
 
 ```{r}
@@ -110,19 +110,29 @@ After examining the distribution of the open boll weight for the control and tre
 To address the non-normality of the treatment group, the natural log of each observation was taken in both groups, and the distribution of the log of each group was examined and a Shapiro-Wilk test for normality was conducted (where the null hypothesis is the data are normal).
 
 ```{r shapiro-wilk-control}
-# Shapiro-Wilk normality test
-control_data_filtered <- cotton_data %>%
-  filter(Treatment == "Control")
-shapiro.test(control_data_filtered$Log.OpenBollWeight) 
+control_data_filtered <- cotton_data %>%                        # create a filtered dataset with the controls  
+  filter(Treatment == "Control")                                # filter to only select rows with controls
+shapiro.test(control_data_filtered$Log.OpenBollWeight)          # Shapiro-Wilk normality test
 ```
 
 ```{r shapiro-wilk-IQ}
-# Shapiro-Wilk normality test
-IQ_data_filtered <- cotton_data %>%
-  filter(Treatment == "IQ")
-shapiro.test(IQ_data_filtered$Log.OpenBollWeight)
+IQ_data_filtered <- cotton_data %>%                             # create a filtered IQ dataset 
+  filter(Treatment == "IQ")                                     # filter to only select rows with IQ observations
+shapiro.test(IQ_data_filtered$Log.OpenBollWeight)               # Shapiro-Wilk normality test
 ```
 
 For the control group, the p-value for the Shapiro-Wilk test was 0.2255 and for the treatment group it was 0.7194. So we don’t have enough evidence to suggest the data are not normal, and we fail to reject the null hypothesis. It appears the log transformation has helped. The normal quantile plot for each group also seems to confirm this.
 
+```{r}
+ggplot(cotton_data, aes(sample = Log.OpenBollWeight,
+                        color = Treatment)) +
+  geom_qq() +
+  geom_qq_line() +
+  labs(y = "Log Open boll weight",
+       title = "Distribution of Log of Open Boll Weight",
+       subtitle = "By Treatment Group") 
+
+```
+
+Below are results for a t-test comparing the difference of the means for the two groups (using the log transformed observations). For a 2-sided test, the p-value is 0.0143, which suggests that at a significance level of 0.05, we have evidence to suggest the means of the two groups are different.
 
