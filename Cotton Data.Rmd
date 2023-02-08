@@ -60,7 +60,7 @@ library(tidyverse)
 ```
 
 
-# Data
+## Data
 
 We can now read in our dataset using the following command:
 
@@ -109,6 +109,21 @@ After examining the distribution of the open boll weight for the control and tre
 
 To address the non-normality of the treatment group, the natural log of each observation was taken in both groups, and the distribution of the log of each group was examined and a Shapiro-Wilk test for normality was conducted (where the null hypothesis is the data are normal).
 
+```{r hist-log-openbollweight}
+ggplot(cotton_data, aes(x = Log.OpenBollWeight ,                 # add the data and specify x-axis
+                        fill = Treatment)) +                     # fill color based on treatment group
+  geom_histogram(bins = 15) +                                    # set appropriate histogram bin size 
+  labs(x = "Log open boll weight",                               # x-axis label
+       y = "Frequency",                                          # y-axis label
+       title = "Distribution of the Log of Open Boll Weight",    # title of the graph
+       subtitle = "By Treatment Group") +                        # graph subtitle
+  facet_wrap(~ Treatment) +                                      # creates panes based on treatment group
+  theme(legend.position = "none")                                # removes legend
+```
+
+
+##### Shapiro-Wilk Normality Tests
+
 ```{r shapiro-wilk-control}
 control_data_filtered <- cotton_data %>%                        # create a filtered dataset with the controls  
   filter(Treatment == "Control")                                # filter to only select rows with controls
@@ -123,6 +138,9 @@ shapiro.test(IQ_data_filtered$Log.OpenBollWeight)               # Shapiro-Wilk n
 
 For the control group, the p-value for the Shapiro-Wilk test was 0.2255 and for the treatment group it was 0.7194. So we don’t have enough evidence to suggest the data are not normal, and we fail to reject the null hypothesis. It appears the log transformation has helped. The normal quantile plot for each group also seems to confirm this.
 
+
+##### Normal Quantile Plots
+
 ```{r}
 ggplot(cotton_data, aes(sample = Log.OpenBollWeight,
                         color = Treatment)) +
@@ -131,8 +149,18 @@ ggplot(cotton_data, aes(sample = Log.OpenBollWeight,
   labs(y = "Log Open boll weight",
        title = "Distribution of Log of Open Boll Weight",
        subtitle = "By Treatment Group") 
+```
+
+
+##### Two-sided t-test
+
+Below are results for a t-test comparing the difference of the means for the two groups (using the log transformed observations). For a 2-sided test, the p-value is 0.0143, which suggests that at a significance level of 0.05, we have evidence to suggest the means of the two groups are different.
+
+```{r}
 
 ```
 
-Below are results for a t-test comparing the difference of the means for the two groups (using the log transformed observations). For a 2-sided test, the p-value is 0.0143, which suggests that at a significance level of 0.05, we have evidence to suggest the means of the two groups are different.
+
+
+
 
