@@ -50,7 +50,7 @@ Plant-based protein hydrolysates (PHs) like iQFORTE have increased in popularity
 We'll use the **tidyverse** package for this analysis. If not previously installed, you can do so by running the following *install.packages* command in the console:
 
 ```{r install-package, eval=FALSE}
-install.packages("tidyverse")
+#install.packages("tidyverse")
 ```
 
 Next, run the following *library* command to load the tidyverse package:
@@ -100,7 +100,9 @@ names(cotton)
 ```
 
 
-## Exploratory Data Analysis
+# Exploratory Data Analysis
+
+## Response: Open Boll Weight
 
 We first create a visualization for the distribution of the **open boll weight** of cotton plants in both the control and treatment groups: 
 
@@ -151,7 +153,7 @@ For the control group, the p-value for the Shapiro-Wilk test was 0.2255 and for 
 To create the normal quantile plots, we will use the **qqplotr** package. If not previously installed, you can do so by running the following *install.packages* command in the console:
 
 ```{r eval=FALSE}
-install.packages("qqplotr")
+#install.packages("qqplotr")
 ```
 
 Load the qqplotr package:
@@ -196,6 +198,49 @@ IQ_log_openbollwt <- IQ_data_filtered %>%                           # create a d
   select(Log.OpenBollWeight)
 t.test(control_log_openbollwt, IQ_log_openbollwt, var.equal=TRUE)   # two-sided t-test
 ```
+
+#### Visualization
+
+Below are side-by-side box plots visualizing the relationship between open boll weight and the treatment group:
+
+```{r box-openbollwt, fig.height=7, fig.width=9}
+ggplot(cotton, aes(x = Treatment,
+                   y = OpenBollWeight_g,
+                   fill = Treatment)) +
+  geom_boxplot() +
+  labs(x = "Treatment",
+       y = "Open Boll Weight (g)",
+       title = "Open Boll Weight (g) vs. Treatment") +
+  theme(legend.position = "none")
+```
+
+
+## Response: Open Bolls per Plant
+
+Below are the distributions for each treatment group. The distribution for the treatment group is right skewed, and the sample size is too small to assume Central Limit Theorem will take effect.
+
+```{r hsit-openbolls, fig.height=6, fig.width=10}
+ggplot(cotton, aes(x = OpenBollsperPlant,
+                   fill = Treatment)) +
+  geom_histogram(bins = 12) +                         
+  labs(x = "Open Bolls per Plant",                             
+       y = "Frequency",                                   
+       title = "Distribution of Open Bolls per Plant",         
+       subtitle = "By Treatment Group") +                      
+  facet_wrap(~ Treatment) +                                    
+  theme(legend.position = "none") 
+```
+
+
+
+
+
+
+
+
+
+
+
 
 
 
