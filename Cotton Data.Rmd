@@ -143,22 +143,41 @@ IQ_data_filtered <- cotton %>%                                  # create a filte
 shapiro.test(IQ_data_filtered$Log.OpenBollWeight)               # Shapiro-Wilk normality test
 ```
 
-For the control group, the p-value for the Shapiro-Wilk test was 0.2255 and for the treatment group it was 0.7194. So we don’t have enough evidence to suggest the data are not normal, and we fail to reject the null hypothesis. It appears the log transformation has helped. The normal quantile plot for each group also seems to confirm this.
+For the control group, the p-value for the Shapiro-Wilk test was 0.2255 and for the IQ treatment group it was 0.7194. So we don’t have enough evidence to suggest the data are not normal, and we fail to reject the null hypothesis. It appears the log transformation has helped. The normal quantile plot for each group also seems to confirm this.
 
 
 ##### Normal Quantile Plots
 
-```{r}
-ggplot(cotton, aes(sample = Log.OpenBollWeight,
-                        color = Treatment)) +
-  geom_qq() +
-  geom_qq_line() +
-  labs(y = "Log Open boll weight",
-       title = "Distribution of Log of Open Boll Weight",
-       subtitle = "By Treatment Group") +
-  facet_wrap(~ Treatment) +
-  theme(legend.position = "none") 
+To create the normal quantile plots, we will use the **qqplotr** package. If not previously installed, you can do so by running the following *install.packages* command in the console:
+
+```{r eval=FALSE}
+install.packages("qqplotr")
 ```
+
+We can now create our normal quantile plots:
+
+```{r Q-Q-control, fig.height=6, fig.width=8}
+library(qqplotr)
+ggplot(control_data_filtered, aes(sample = Log.OpenBollWeight)) +
+  stat_qq_point(size = 2) +
+  stat_qq_line() +
+  stat_qq_band(alpha = 0.5) +
+  labs(x = "Theoretical Quantiles" ,
+       y = "Sample Quantiles" ,
+       title = "Control Group Normal Quantile Plot")
+```
+
+```{r Q-Q-IQ, fig.height=6, fig.width=8}
+ggplot(IQ_data_filtered, aes(sample = Log.OpenBollWeight)) +
+  stat_qq_point(size = 2) +
+  stat_qq_line() +
+  stat_qq_band(alpha = 0.5) +
+  labs(x = "Theoretical Quantiles" ,
+       y = "Sample Quantiles" ,
+       title = " IQ Group Normal Quantile Plot")
+```
+
+Both of the normal quantile plots show that the log transformed data in both groups are normal.
 
 
 ##### Two-sided t-test
