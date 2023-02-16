@@ -132,14 +132,14 @@ To address the non-normality of the treatment group, the natural log of each obs
 ##### Shapiro-Wilk Normality Tests
 
 ```{r shapiro-wilk-control}
-control_data_filtered <- cotton %>%                             # create a filtered dataset with the controls  
-  filter(Treatment == "Control")                                # filter to only select rows with controls
+control_data_filtered <- cotton %>%                             # create a data frame with only the controls  
+  filter(Treatment == "Control")                                # filter 
 shapiro.test(control_data_filtered$Log.OpenBollWeight)          # Shapiro-Wilk normality test
 ```
 
 ```{r shapiro-wilk-IQ}
-IQ_data_filtered <- cotton %>%                                  # create a filtered IQ dataset 
-  filter(Treatment == "IQ")                                     # filter to only select rows with IQ observations
+IQ_data_filtered <- cotton %>%                                  # create a data frame with IQ observations only 
+  filter(Treatment == "IQ")                                     # filter 
 shapiro.test(IQ_data_filtered$Log.OpenBollWeight)               # Shapiro-Wilk normality test
 ```
 
@@ -154,10 +154,15 @@ To create the normal quantile plots, we will use the **qqplotr** package. If not
 install.packages("qqplotr")
 ```
 
+Load the qqplotr package:
+
+```{r message=FALSE, eval=TRUE}
+library(qqplotr)
+```
+
 We can now create our normal quantile plots:
 
-```{r Q-Q-control, fig.height=6, fig.width=8}
-library(qqplotr)
+```{r Q-Q-control}
 ggplot(control_data_filtered, aes(sample = Log.OpenBollWeight)) +
   stat_qq_point(size = 2) +
   stat_qq_line() +
@@ -167,7 +172,7 @@ ggplot(control_data_filtered, aes(sample = Log.OpenBollWeight)) +
        title = "Control Group Normal Quantile Plot")
 ```
 
-```{r Q-Q-IQ, fig.height=6, fig.width=8}
+```{r Q-Q-IQ}
 ggplot(IQ_data_filtered, aes(sample = Log.OpenBollWeight)) +
   stat_qq_point(size = 2) +
   stat_qq_line() +
@@ -177,15 +182,19 @@ ggplot(IQ_data_filtered, aes(sample = Log.OpenBollWeight)) +
        title = " IQ Group Normal Quantile Plot")
 ```
 
-Both of the normal quantile plots show that the log transformed data in both groups are normal.
+Both of the normal quantile plots show that the log transformed data in the two groups are normal.
 
 
 ##### Two-sided t-test
 
-Below are results for a t-test comparing the difference of the means for the two groups (using the log transformed observations). For a 2-sided test, the p-value is 0.0143, which suggests that at a significance level of 0.05, we have evidence to suggest the means of the two groups are different.
+We then do a t-test to compare the difference of the means for the two groups using the log transformed observations. For a 2-sided test, the p-value is 0.0142, which suggests that at a significance level of 0.05, we have evidence to suggest the means of the two groups are different. 
 
-```{r}
-
+```{r t-test}
+control_log_openbollwt <- control_data_filtered %>%                 # create a data frame with observations from control group
+  select(Log.OpenBollWeight)
+IQ_log_openbollwt <- IQ_data_filtered %>%                           # create a data frame with observations from IQ group
+  select(Log.OpenBollWeight)
+t.test(control_log_openbollwt, IQ_log_openbollwt, var.equal=TRUE)   # two-sided t-test
 ```
 
 
