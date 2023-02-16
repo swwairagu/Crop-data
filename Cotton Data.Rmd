@@ -49,13 +49,13 @@ Plant-based protein hydrolysates (PHs) like iQFORTE have increased in popularity
 
 We'll use the **tidyverse** package for this analysis. If not previously installed, you can do so by running the following *install.packages* command in the console:
 
-```{r eval=FALSE}
+```{r install-package, eval=FALSE}
 install.packages("tidyverse")
 ```
 
 Next, run the following *library* command to load the tidyverse package:
 
-```{r message=FALSE, eval=TRUE}
+```{r load-package, message=FALSE, eval=TRUE}
 library(tidyverse)
 ```
 
@@ -76,8 +76,27 @@ This dataset has `r nrow(cotton_data)` rows and `r ncol(cotton_data)` columns.
 
 Each row represents a unique cotton plant, treatment observation. \
 Each column represents a variable. To get a list of the variables in the data frame, we can use the `names()` function:
-```{r}
+```{r variable-names}
 names(cotton_data)
+```
+
+
+We'll now create a new data frame with the same variables though some have been renamed for consistency:
+
+```{r rename-variables}
+cotton <- cotton_data %>% 
+  rename(
+    OpenBollWeight_g = Open.Boll.Weight..g.,
+    OpenBollsperPlant = Open.Bolls.per.Plant,
+    SeedWeight_g = Seed.Weight..g.,
+    LintWeight_g = Lint.Weight..g.
+    )
+```
+
+#### New variable names
+
+```{r new-var-names}
+names(cotton)
 ```
 
 
@@ -85,8 +104,8 @@ names(cotton_data)
 
 We first create a visualization for the distribution of the **open boll weight** of cotton plants in both the control and treatment groups: 
 
-```{r hist-openbollweight}
-ggplot(cotton_data, aes(x = Open.Boll.Weight..g. ,             # add the data and specify x-axis
+```{r hist-openbollweight, fig.height=6, fig.width=10}
+ggplot(cotton, aes(x = OpenBollWeight_g ,                      # add the data and specify x-axis
                         fill = Treatment)) +                   # fill color based on treatment group
   geom_histogram(bins = 15) +                                  # set appropriate histogram bin size 
   labs(x = "Open boll weight (g)",                             # x-axis label
@@ -97,9 +116,9 @@ ggplot(cotton_data, aes(x = Open.Boll.Weight..g. ,             # add the data an
   theme(legend.position = "none")                              # removes legend
 ```
 
-```{r}
-# Check sample sizes
-cotton_data %>%
+```{r n-treatment}
+# Check sample sizes by treatment group
+cotton %>%
   count(Treatment)
 ```
 
@@ -109,29 +128,17 @@ After examining the distribution of the open boll weight for the control and tre
 
 To address the non-normality of the treatment group, the natural log of each observation was taken in both groups, and the distribution of the log of each group was examined and a Shapiro-Wilk test for normality was conducted (where the null hypothesis is the data are normal).
 
-```{r hist-log-openbollweight}
-ggplot(cotton_data, aes(x = Log.OpenBollWeight ,                 # add the data and specify x-axis
-                        fill = Treatment)) +                     # fill color based on treatment group
-  geom_histogram(bins = 15) +                                    # set appropriate histogram bin size 
-  labs(x = "Log open boll weight",                               # x-axis label
-       y = "Frequency",                                          # y-axis label
-       title = "Distribution of the Log of Open Boll Weight",    # title of the graph
-       subtitle = "By Treatment Group") +                        # graph subtitle
-  facet_wrap(~ Treatment) +                                      # creates panes based on treatment group
-  theme(legend.position = "none")                                # removes legend
-```
-
 
 ##### Shapiro-Wilk Normality Tests
 
 ```{r shapiro-wilk-control}
-control_data_filtered <- cotton_data %>%                        # create a filtered dataset with the controls  
+control_data_filtered <- cotton %>%                             # create a filtered dataset with the controls  
   filter(Treatment == "Control")                                # filter to only select rows with controls
 shapiro.test(control_data_filtered$Log.OpenBollWeight)          # Shapiro-Wilk normality test
 ```
 
 ```{r shapiro-wilk-IQ}
-IQ_data_filtered <- cotton_data %>%                             # create a filtered IQ dataset 
+IQ_data_filtered <- cotton %>%                                  # create a filtered IQ dataset 
   filter(Treatment == "IQ")                                     # filter to only select rows with IQ observations
 shapiro.test(IQ_data_filtered$Log.OpenBollWeight)               # Shapiro-Wilk normality test
 ```
@@ -142,13 +149,15 @@ For the control group, the p-value for the Shapiro-Wilk test was 0.2255 and for 
 ##### Normal Quantile Plots
 
 ```{r}
-ggplot(cotton_data, aes(sample = Log.OpenBollWeight,
+ggplot(cotton, aes(sample = Log.OpenBollWeight,
                         color = Treatment)) +
   geom_qq() +
   geom_qq_line() +
   labs(y = "Log Open boll weight",
        title = "Distribution of Log of Open Boll Weight",
-       subtitle = "By Treatment Group") 
+       subtitle = "By Treatment Group") +
+  facet_wrap(~ Treatment) +
+  theme(legend.position = "none") 
 ```
 
 
