@@ -344,9 +344,70 @@ ggplot(cotton, aes(x = Treatment,
 ```
 
 
+### Response: Lint Weight
+
+We first examine the distribution of lint weight for each treatment group:
+
+```{r hist-lintwt, fig.height=5, fig.width=9}
+ggplot(cotton, aes(x = LintWeight_g,
+                   fill = Treatment)) +
+  geom_histogram(bins = 14) +                         
+  labs(x = "Lint Weight (g)",                             
+       y = "Frequency",                                   
+       title = "Distribution of Lint Weight",         
+       subtitle = "By Treatment Group") +                      
+  facet_wrap(~ Treatment) +                                    
+  theme(legend.position = "none")
+```
+
+The distribution for the treatment group is *right skewed*, so a log transformation was applied to the lint weight variable, and the distribution of the log of each group was examined and a Shapiro-Wilk test for normality was conducted (where the null hypothesis is the data are normal). 
+
+##### Shapiro-Wilk Normality Test
+
+```{r shap-wilk-control-lintwt}
+shapiro.test(control_data_filtered$Log.LintWeight) 
+```
+
+```{r shap-wilk-IQ-lintwt}
+shapiro.test(IQ_data_filtered$Log.LintWeight) 
+```
+
+```{r hist-log-lintwt, fig.height=5, fig.width=9}
+ggplot(cotton, aes(x = Log.LintWeight,
+                   fill = Treatment)) +
+  geom_histogram(bins = 13) +                         
+  labs(x = "Log Lint Weight",                             
+       y = "Frequency",                                   
+       title = "Distribution of the Log of Lint Weight",         
+       subtitle = "By Treatment Group") +                      
+  facet_wrap(~ Treatment) +                                    
+  theme(legend.position = "none")
+```
+
+Taking a log transformation did help, but the control group distribution after doing the log transformation is starting to look left skewed.  The p-value for the Shapiro-Wilk test for normality is 0.0562, so technically we fail to reject that the data are normal at the 0.05 level of significance. But I am still not comfortable with how left-skewed the control group looks after the transformation, so we will do the Wilcoxon nonparametric test instead.
+
+##### Wilcoxon Rank Sum Test
+
+```{r wilcox-lintwt}
+cotton %>% 
+  wilcox_test(LintWeight_g ~ Treatment)
+```
+
+The p-value for the normal approximation is 0.0103, which is significant at the 0.05 level. We can conclude that there is a significant difference in the location of the two distributions, and the median lint weight differs for the control and treatment group.
 
 
+#### Visualization
 
+```{r box-lintwt, fig.height=7, fig.width=9}
+ggplot(cotton, aes(x = Treatment,
+                   y = LintWeight_g,
+                   fill = Treatment)) +
+  geom_boxplot() +
+  labs(x = "Treatment",
+       y = "Lint Weight (g)",
+       title = "Lint Weight (g) vs. Treatment") +
+  theme(legend.position = "none")
+```
 
 
 
