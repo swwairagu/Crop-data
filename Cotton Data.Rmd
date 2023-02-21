@@ -131,15 +131,15 @@ After examining the distribution of the open boll weight for the control and tre
 To address the non-normality of the treatment group, the natural log of each observation was taken in both groups, and the distribution of the log of each group was examined and a Shapiro-Wilk test for normality was conducted (where the null hypothesis is the data are normal).
 
 
-##### Shapiro-Wilk Normality Tests
+##### Shapiro-Wilk Normality Test
 
-```{r shap-wilk-control-openbollwt}
+```{r shap-wilk-control-log-openbollwt}
 control_data_filtered <- cotton %>%                             # create a data frame with only the controls  
   filter(Treatment == "Control")                                # filter 
 shapiro.test(control_data_filtered$Log.OpenBollWeight)          # Shapiro-Wilk normality test
 ```
 
-```{r shap-wilk-IQ-openbollwt}
+```{r shap-wilk-IQ-log-openbollwt}
 IQ_data_filtered <- cotton %>%                                  # create a data frame with IQ observations only 
   filter(Treatment == "IQ")                                     # filter 
 shapiro.test(IQ_data_filtered$Log.OpenBollWeight)               # Shapiro-Wilk normality test
@@ -191,7 +191,7 @@ Both of the normal quantile plots show that the log transformed data in the two 
 
 We then do a t-test to compare the difference of the means for the two groups using the log transformed observations. For a 2-sided test, the p-value is 0.0142, which suggests that at a significance level of 0.05, we have evidence to suggest the means of the two groups are different. 
 
-```{r t-test}
+```{r t-test-log-openbollwt}
 control_log_openbollwt <- control_data_filtered %>%                 # data frame with control group observations
   select(Log.OpenBollWeight)
 IQ_log_openbollwt <- IQ_data_filtered %>%                           # data frame with IQ group observations
@@ -219,7 +219,7 @@ ggplot(cotton, aes(x = Treatment,
 
 We first examine the distribution of open bolls per plant for each treatment group:
 
-```{r hsit-openbolls, fig.height=5, fig.width=9}
+```{r hsit-openbollspp, fig.height=5, fig.width=9}
 ggplot(cotton, aes(x = OpenBollsperPlant,
                    fill = Treatment)) +
   geom_histogram(bins = 12) +                         
@@ -234,13 +234,13 @@ ggplot(cotton, aes(x = OpenBollsperPlant,
 
 The distribution for the treatment group is *right skewed*, and the sample size is too small to assume Central Limit Theorem will take effect. We therefore take the natural log of each observation in both groups and carry out a Shapiro-Wilk test for normality (where the null hypothesis is the data are normal).
 
-##### Shapiro-Wilk Normality Tests
+##### Shapiro-Wilk Normality Test
 
-```{r shap-wilk-control-bollsperplant}
+```{r shap-wilk-control-openbollspp}
 shapiro.test(control_data_filtered$Log.OpenBollsperPlant) 
 ```
 
-```{r shap-wilk-IQ-bollsperplant}
+```{r shap-wilk-IQ-openbollspp}
 shapiro.test(IQ_data_filtered$Log.OpenBollsperPlant)
 ```
 
@@ -270,6 +270,79 @@ cotton %>%
 ```
 
 The p-value for the 2-sided test is 0.0260. So we can conclude that the median open bolls per plant differs for the treatment and control groups.
+
+
+#### Visualization
+
+```{r box-openbollspp, fig.height=7, fig.width=9}
+ggplot(cotton, aes(x = Treatment,
+                   y = OpenBollsperPlant,
+                   fill = Treatment)) +
+  geom_boxplot() +
+  labs(x = "Treatment",
+       y = "Open Bolls per Plant",
+       title = "Open Bolls per Plant vs. Treatment") +
+  theme(legend.position = "none")
+```
+
+
+### Response: Seed Weight
+
+We first examine the distribution of seed weight for each treatment group:
+
+```{r hist-seedwt, fig.height=5, fig.width=9}
+ggplot(cotton, aes(x = SeedWeight_g,
+                   fill = Treatment)) +
+  geom_histogram(bins = 13) +                         
+  labs(x = "Seed Weight (g)",                             
+       y = "Frequency",                                   
+       title = "Distribution of Seed Weight",         
+       subtitle = "By Treatment Group") +                      
+  facet_wrap(~ Treatment) +                                    
+  theme(legend.position = "none")
+```
+
+As with the other responses, the distribution of seed weight for the treatment group is *right skewed*, so a log transformation was applied to the seed weight variable, and the distribution of the log of each group was examined and a Shapiro-Wilk test for normality was conducted (where the null hypothesis is the data are normal). 
+
+##### Shapiro-Wilk Normality Test
+
+```{r shap-wilk-control-seedwt}
+shapiro.test(control_data_filtered$Log.SeedWeight)
+```
+
+```{r shap-wilk-IQ-seedwt}
+shapiro.test(IQ_data_filtered$Log.SeedWeight)
+```
+
+The p-value for the Shapiro-Wilk test for the control group is 0.2148, and for the treatment group it is 0.9993. So we don’t have enough evidence to suggest the data are not normal, and we fail to reject the null hypothesis. It seems the log transformation has helped.
+
+
+#### Two-sided t-test
+
+We then do a t-test to compare the difference of the means for the two groups using the log transformed observations. For a 2-sided test, the p-value is 0.0078, which suggests at a significance level of 0.05, we have evidence to suggest the means of the two groups are different.
+
+```{r t-test-log-seedwt}
+control_log_seedwt <- control_data_filtered %>%                 
+  select(Log.SeedWeight)
+IQ_log_seedwt <- IQ_data_filtered %>%       
+  select(Log.SeedWeight)
+t.test(control_log_seedwt, IQ_log_seedwt, var.equal=TRUE)   
+```
+
+
+#### Visualization
+
+```{r box-seedwt, fig.height=7, fig.width=9}
+ggplot(cotton, aes(x = Treatment,
+                   y = SeedWeight_g,
+                   fill = Treatment)) +
+  geom_boxplot() +
+  labs(x = "Treatment",
+       y = "Seed Weight (g)",
+       title = "Seed Weight (g) vs. Treatment") +
+  theme(legend.position = "none")
+```
+
 
 
 
