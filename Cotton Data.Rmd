@@ -104,7 +104,7 @@ names(cotton)
 
 ### Response: Open Boll Weight
 
-We first examine the distribution of the **open boll weight** of cotton plants in both the control and treatment groups: 
+We first examine the distribution of the **open boll weight** of cotton plants in both the control and IQ groups: 
 
 ```{r hist-openbollweight, fig.height=5, fig.width=9}
 ggplot(cotton, aes(x = OpenBollWeight_g ,                      # add the data and specify x-axis
@@ -125,10 +125,10 @@ cotton %>%
 ```
 
 
-After examining the distribution of the open boll weight for the control and treatments groups, it was found that the distribution for the iQFORTE treatment group is *right-skewed* and the sample size is only 20 (not large enough for the Central Limit Theorem to take effect if using a t-test to compare the means of the two groups).
+After examining the distribution of the open boll weight for the control and IQ groups, it was found that the distribution for the IQ treatment group is *right-skewed* and the sample size is only 20 (not large enough for the Central Limit Theorem to take effect if using a t-test to compare the means of the two groups).
 
 
-To address the non-normality of the treatment group, the natural log of each observation was taken in both groups, and the distribution of the log of each group was examined and a Shapiro-Wilk test for normality was conducted (where the null hypothesis is the data are normal).
+To address the non-normality of the IQ treatment group, the natural log of each observation was taken in both groups, and the distribution of the log of each group was examined and a Shapiro-Wilk test for normality was conducted (where the null hypothesis is the data are normal).
 
 
 ##### Shapiro-Wilk Normality Test
@@ -201,7 +201,7 @@ t.test(control_log_openbollwt, IQ_log_openbollwt, var.equal=TRUE)   # two-sided 
 
 #### Visualization
 
-Below are side-by-side box plots visualizing the relationship between open boll weight and the treatment group:
+Below are side-by-side box plots visualizing the relationship between open boll weight and the treatment groups:
 
 ```{r box-openbollwt, fig.height=7, fig.width=9}
 ggplot(cotton, aes(x = Treatment,
@@ -232,7 +232,7 @@ ggplot(cotton, aes(x = OpenBollsperPlant,
 ```
 
 
-The distribution for the treatment group is *right skewed*, and the sample size is too small to assume Central Limit Theorem will take effect. We therefore take the natural log of each observation in both groups and carry out a Shapiro-Wilk test for normality (where the null hypothesis is the data are normal).
+The distribution for the IQ group is *right skewed*, and the sample size is too small to assume Central Limit Theorem will take effect. We therefore take the natural log of each observation in both groups and carry out a Shapiro-Wilk test for normality (where the null hypothesis is the data are normal).
 
 ##### Shapiro-Wilk Normality Test
 
@@ -269,7 +269,7 @@ cotton %>%
   wilcox_test(OpenBollsperPlant ~ Treatment)
 ```
 
-The p-value for the 2-sided test is 0.0260. So we can conclude that the median open bolls per plant differs for the treatment and control groups.
+The p-value for the 2-sided test is 0.0260. So we can conclude that the median open bolls per plant differs for the IQ and control groups.
 
 
 #### Visualization
@@ -302,7 +302,7 @@ ggplot(cotton, aes(x = SeedWeight_g,
   theme(legend.position = "none")
 ```
 
-As with the other responses, the distribution of seed weight for the treatment group is *right skewed*, so a log transformation was applied to the seed weight variable, and the distribution of the log of each group was examined and a Shapiro-Wilk test for normality was conducted (where the null hypothesis is the data are normal). 
+As with the other responses, the distribution of seed weight for the IQ group is *right skewed*, so a log transformation was applied to the seed weight variable, and the distribution of the log of each group was examined and a Shapiro-Wilk test for normality was conducted (where the null hypothesis is the data are normal). 
 
 ##### Shapiro-Wilk Normality Test
 
@@ -314,7 +314,7 @@ shapiro.test(control_data_filtered$Log.SeedWeight)
 shapiro.test(IQ_data_filtered$Log.SeedWeight)
 ```
 
-The p-value for the Shapiro-Wilk test for the control group is 0.2148, and for the treatment group it is 0.9993. So we don’t have enough evidence to suggest the data are not normal, and we fail to reject the null hypothesis. It seems the log transformation has helped.
+The p-value for the Shapiro-Wilk test for the control group is 0.2148, and for the IQ group it is 0.9993. So we don’t have enough evidence to suggest the data are not normal, and we fail to reject the null hypothesis. It seems the log transformation has helped.
 
 
 #### Two-sided t-test
@@ -360,7 +360,7 @@ ggplot(cotton, aes(x = LintWeight_g,
   theme(legend.position = "none")
 ```
 
-The distribution for the treatment group is *right skewed*, so a log transformation was applied to the lint weight variable, and the distribution of the log of each group was examined and a Shapiro-Wilk test for normality was conducted (where the null hypothesis is the data are normal). 
+The distribution for the IQ group is *right skewed*, so a log transformation was applied to the lint weight variable, and the distribution of the log of each group was examined and a Shapiro-Wilk test for normality was conducted (where the null hypothesis is the data are normal). 
 
 ##### Shapiro-Wilk Normality Test
 
@@ -393,7 +393,7 @@ cotton %>%
   wilcox_test(LintWeight_g ~ Treatment)
 ```
 
-The p-value for the normal approximation is 0.0103, which is significant at the 0.05 level. We can conclude that there is a significant difference in the location of the two distributions, and the median lint weight differs for the control and treatment group.
+The p-value for the normal approximation is 0.0103, which is significant at the 0.05 level. We can conclude that there is a significant difference in the location of the two distributions, and the median lint weight differs for the control and IQ groups.
 
 
 #### Visualization
