@@ -50,7 +50,7 @@ Plant-based protein hydrolysates (PHs) like iQFORTE have increased in popularity
 We'll use the **tidyverse** package for this analysis. If not previously installed, you can do so by running the following *install.packages* command in the console:
 
 ```{r install-package, eval=FALSE}
-#install.packages("tidyverse")
+install.packages("tidyverse")
 ```
 
 Next, run the following *library* command to load the tidyverse package:
@@ -100,13 +100,13 @@ names(cotton)
 ```
 
 
-# Exploratory Data Analysis
+## Exploratory Data Analysis
 
-## Response: Open Boll Weight
+### Response: Open Boll Weight
 
-We first create a visualization for the distribution of the **open boll weight** of cotton plants in both the control and treatment groups: 
+We first examine the distribution of the **open boll weight** of cotton plants in both the control and treatment groups: 
 
-```{r hist-openbollweight, fig.height=6, fig.width=10}
+```{r hist-openbollweight, fig.height=5, fig.width=9}
 ggplot(cotton, aes(x = OpenBollWeight_g ,                      # add the data and specify x-axis
                         fill = Treatment)) +                   # fill color based on treatment group
   geom_histogram(bins = 15) +                                  # set appropriate histogram bin size 
@@ -133,13 +133,13 @@ To address the non-normality of the treatment group, the natural log of each obs
 
 ##### Shapiro-Wilk Normality Tests
 
-```{r shapiro-wilk-control}
+```{r shap-wilk-control-openbollwt}
 control_data_filtered <- cotton %>%                             # create a data frame with only the controls  
   filter(Treatment == "Control")                                # filter 
 shapiro.test(control_data_filtered$Log.OpenBollWeight)          # Shapiro-Wilk normality test
 ```
 
-```{r shapiro-wilk-IQ}
+```{r shap-wilk-IQ-openbollwt}
 IQ_data_filtered <- cotton %>%                                  # create a data frame with IQ observations only 
   filter(Treatment == "IQ")                                     # filter 
 shapiro.test(IQ_data_filtered$Log.OpenBollWeight)               # Shapiro-Wilk normality test
@@ -153,12 +153,12 @@ For the control group, the p-value for the Shapiro-Wilk test was 0.2255 and for 
 To create the normal quantile plots, we will use the **qqplotr** package. If not previously installed, you can do so by running the following *install.packages* command in the console:
 
 ```{r eval=FALSE}
-#install.packages("qqplotr")
+install.packages("qqplotr")
 ```
 
 Load the qqplotr package:
 
-```{r message=FALSE, eval=TRUE}
+```{r warning=FALSE, message=FALSE, eval=TRUE}
 library(qqplotr)
 ```
 
@@ -187,14 +187,14 @@ ggplot(IQ_data_filtered, aes(sample = Log.OpenBollWeight)) +
 Both of the normal quantile plots show that the log transformed data in the two groups are normal.
 
 
-##### Two-sided t-test
+#### Two-sided t-test
 
 We then do a t-test to compare the difference of the means for the two groups using the log transformed observations. For a 2-sided test, the p-value is 0.0142, which suggests that at a significance level of 0.05, we have evidence to suggest the means of the two groups are different. 
 
 ```{r t-test}
-control_log_openbollwt <- control_data_filtered %>%                 # create a data frame with observations from control group
+control_log_openbollwt <- control_data_filtered %>%                 # data frame with control group observations
   select(Log.OpenBollWeight)
-IQ_log_openbollwt <- IQ_data_filtered %>%                           # create a data frame with observations from IQ group
+IQ_log_openbollwt <- IQ_data_filtered %>%                           # data frame with IQ group observations
   select(Log.OpenBollWeight)
 t.test(control_log_openbollwt, IQ_log_openbollwt, var.equal=TRUE)   # two-sided t-test
 ```
@@ -215,11 +215,11 @@ ggplot(cotton, aes(x = Treatment,
 ```
 
 
-## Response: Open Bolls per Plant
+### Response: Open Bolls per Plant
 
-Below are the distributions for each treatment group. The distribution for the treatment group is right skewed, and the sample size is too small to assume Central Limit Theorem will take effect.
+We first examine the distribution of open bolls per plant for each treatment group:
 
-```{r hsit-openbolls, fig.height=6, fig.width=10}
+```{r hsit-openbolls, fig.height=5, fig.width=9}
 ggplot(cotton, aes(x = OpenBollsperPlant,
                    fill = Treatment)) +
   geom_histogram(bins = 12) +                         
@@ -232,12 +232,44 @@ ggplot(cotton, aes(x = OpenBollsperPlant,
 ```
 
 
+The distribution for the treatment group is *right skewed*, and the sample size is too small to assume Central Limit Theorem will take effect. We therefore take the natural log of each observation in both groups and carry out a Shapiro-Wilk test for normality (where the null hypothesis is the data are normal).
+
+##### Shapiro-Wilk Normality Tests
+
+```{r shap-wilk-control-bollsperplant}
+shapiro.test(control_data_filtered$Log.OpenBollsperPlant) 
+```
+
+```{r shap-wilk-IQ-bollsperplant}
+shapiro.test(IQ_data_filtered$Log.OpenBollsperPlant)
+```
+
+Taking a log transformation for this response variable did not help. It made the distribution of the control group left skewed. Furthermore, for the control group, the p-value for the Shapiro-Wilk test is 0.0351 so we reject the null hypothesis as we do not have enough evidence to suggest the data are normal.
+
+Consequently, a Wilcoxon rank sum test was conducted. The Wilcoxon rank sum test is a non-parametric alternative to the independent two samples t-test for comparing two independent groups, in the situation where the data are not normally distributed. It is also based on ranks, so it is resistant to outliers.  
 
 
+##### Wilcoxon Rank Sum Test
 
+To perform the Wilcoxon rank sum test, we will use the **rstatix** package. If not previously installed, you can do so by running the following *install.packages* command in the console:
 
+```{r eval=FALSE}
+install.packages("rstatix")
+```
 
+We then load rstatix package: 
 
+```{r warning=FALSE, message=FALSE, eval=TRUE}
+library(rstatix)
+```
+
+We can now perform the test: 
+```{r wilcox-openbollspp}
+cotton %>% 
+  wilcox_test(OpenBollsperPlant ~ Treatment)
+```
+
+The p-value for the 2-sided test is 0.0260. So we can conclude that the median open bolls per plant differs for the treatment and control groups.
 
 
 
