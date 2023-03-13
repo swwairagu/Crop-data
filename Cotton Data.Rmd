@@ -11,10 +11,12 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## Objective
+
+The aim of this research project is to investigate the effect of **iQFORTE**, a plant-based amino acid biostimulant, on cotton. We do this by exploring and analyzing cotton data provided by Matthew Starr of the Department of Crop and Soil Sciences at North Carolina State University.
+
+
 ## Background
-
-The aim of this research project is to explore and analyze cotton data provided by Matthew Starr of the Department of Crop and Soil Sciences at North Carolina State University to understand the effect of **iQFORTE**, a plant-based amino acid biostimulant on cotton. 
-
 
 A plant biostimulant is any substance or microorganism applied to plants that fosters plant growth and development throughout the crop life cycle from seed germination to planting maturity. Biostimulants achieve this in a number of demonstrated ways such as:
 
@@ -30,7 +32,7 @@ A plant biostimulant is any substance or microorganism applied to plants that fo
 
 - Enhancing soil fertility, particularly by fostering the development of complementary soil microorganisms
 
-Plant-based protein hydrolysates (PHs) like iQFORTE have increased in popularity because of their potential to increase the germination, productivity and quality of a wide range of horticultural and agronomic crops. iQFORTE specifically is a natural extract whose active materials are oligopeptides and free amino acids obtained by enzymatic hydrolysis from highly energetic seeds that works to:
+Plant-based protein hydrolysates (PHs) like iQFORTE have increased in popularity because of their potential to increase the germination, productivity and quality of a wide range of horticultural and agronomic crops. iQFORTE contains oligopeptides and free amino acids as active materials and specifically works to:
 
 - Strengthen the root system
 
@@ -68,7 +70,6 @@ We can now read in our dataset using the following command:
 cotton_data <- read.csv("data/cotton-data.csv")
 ```
 
-
 To view the data in the data viewer, run `View(cotton_data)` in the console. This will pop open a separate window with the data.
 
 
@@ -76,12 +77,13 @@ This dataset has `r nrow(cotton_data)` rows and `r ncol(cotton_data)` columns.
 
 Each row represents a unique cotton plant, treatment observation. \
 Each column represents a variable. To get a list of the variables in the data frame, we can use the `names()` function:
+
 ```{r variable-names}
 names(cotton_data)
 ```
 
 
-We'll now create a new data frame with the same variables though some have been renamed for consistency:
+I'll rename some of the variables for consistency and to minimize the possibility of errors when using the variable names:
 
 ```{r rename-variables}
 cotton <- cotton_data %>% 
@@ -263,7 +265,8 @@ We then load rstatix package:
 library(rstatix)
 ```
 
-We can now perform the test: 
+We can now perform the Wilcoxon Rank Sum test: 
+
 ```{r wilcox-openbollspp}
 cotton %>% 
   wilcox_test(OpenBollsperPlant ~ Treatment)
@@ -408,6 +411,40 @@ ggplot(cotton, aes(x = Treatment,
        title = "Lint Weight (g) vs. Treatment") +
   theme(legend.position = "none")
 ```
+
+## Lint Quality Data 
+
+First, we read in the cotton lint quality data:
+
+```{r lint-data, message=FALSE, eval=TRUE}
+lint_data <- read.csv("data/lint-quality-data.csv")
+```
+
+
+Responses of interest include: length (UHML), strength (Str), micronaire (Mic), uniformity (UI)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
