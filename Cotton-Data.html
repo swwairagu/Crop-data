@@ -820,23 +820,24 @@ pipeline, we will need to write a function that takes a numeric vector
 as input and performs the steps of the analysis.</p>
 <div id="function" class="section level3">
 <h3>Function</h3>
-<pre class="r"><code>analyze_data &lt;- function(data){
+<pre class="r"><code>analyze_data &lt;- function(data, column_name){
+ 
   #1. Check distribution using a histogram
-  hist_plot &lt;- ggplot(aes(data)) +
+  hist_plot &lt;- ggplot(data, aes(x = column_name)) +
     geom_histogram(bins = 13) +
-    labs(title = &quot;Histogram&quot;, x = &quot;Data&quot;, y = &quot;Frequency&quot;)
+    labs(title = &quot;Histogram&quot;, x = &quot;column_name&quot;, y = &quot;Frequency&quot;)
   
   print(hist_plot)
   
   #2. Perform log transformation for skewed data
-  log_data &lt;- log(data)
+  log_data &lt;- log(data(column_name))
   
   #3. Check for normality
   shapiro_test &lt;- shapiro.test(log_data)
   print(shapiro_test)
   
   #4. Normal Quantile Plot
-  qq_plot &lt;- ggplot(aes(sample = log_data)) +
+  qq_plot &lt;- ggplot(log_data, aes(sample = log_data)) +
     stat_qq_point(size = 2) +
     stat_qq_line() +
     stat_qq_band(alpha = 0.5) +
@@ -844,8 +845,17 @@ as input and performs the steps of the analysis.</p>
   
   print(qq_plot)
 
-  
-  }</code></pre>
+  #5. Perform t-test or Wilcoxon Rank sum test based on Shapiro-Wilk test result
+  if (shapiro_test$p-value &gt; 0.05) {
+    t_test &lt;- t.test(log_data, var.equal=TRUE)   # Perform t-test
+    print(t_test)
+  }
+  else {
+    wilcox &lt;- wilcox_test(data ~ Treatment)      # Perform Wilcoxon Rank Sum test
+    print(wilcox)
+  }
+}</code></pre>
+<pre class="r"><code>#analyze_data(lint_data, &quot;UHML&quot;)</code></pre>
 <p>Responses of interest include: length (UHML), strength (Str),
 micronaire (Mic), uniformity (UI)</p>
 </div>
