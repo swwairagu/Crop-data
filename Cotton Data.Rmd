@@ -420,6 +420,35 @@ First, we read in the cotton lint quality data:
 lint_data <- read.csv("data/lint-quality-data.csv")
 ```
 
+This dataset has `r nrow(lint_data)` rows and `r ncol(lint_data)` columns.
+
+Each row represents a unique cotton plant, treatment observation. \
+Each column represents a variable. To get a list of the variables in the data frame, we use the `names()` function:
+
+```{r lint-var}
+names(lint_data)
+```
+
+To analyze the lint quality data, we will follow the steps used in the analysis of the cotton data above. To streamline the analysis pipeline, we will need to write a function that takes a numeric vector as input and performs the steps of the analysis.
+
+
+### Function 
+
+```{r function}
+analyze_data <- function(data){
+  #1. Check distribution using a histogram
+  hist_plot <- ggplot(aes(data)) +
+    geom_histogram(bins = 13) +
+    labs(title = "Histogram", x = "Data", y = "Frequency")
+  
+  print(hist_plot)
+}
+```
+
+
+
+
+
 
 Responses of interest include: length (UHML), strength (Str), micronaire (Mic), uniformity (UI)
 

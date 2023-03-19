@@ -806,8 +806,31 @@ median lint weight differs for the control and IQ groups.</p>
 <h2>Lint Quality Data</h2>
 <p>First, we read in the cotton lint quality data:</p>
 <pre class="r"><code>lint_data &lt;- read.csv(&quot;data/lint-quality-data.csv&quot;)</code></pre>
+<p>This dataset has 39 rows and 7 columns.</p>
+<p>Each row represents a unique cotton plant, treatment
+observation.<br />
+Each column represents a variable. To get a list of the variables in the
+data frame, we use the <code>names()</code> function:</p>
+<pre class="r"><code>names(lint_data)</code></pre>
+<pre><code>## [1] &quot;Treatment&quot;        &quot;Micronaire&quot;       &quot;UHML&quot;             &quot;Uniformity.Index&quot;
+## [5] &quot;Strength&quot;         &quot;Elongation&quot;       &quot;ShortFiberIndex&quot;</code></pre>
+<p>To analyze the lint quality data, we will follow the steps used in
+the analysis of the cotton data above. To streamline the analysis
+pipeline, we will need to write a function that takes a numeric vector
+as input and performs the steps of the analysis.</p>
+<div id="function" class="section level3">
+<h3>Function</h3>
+<pre class="r"><code>analyze_data &lt;- function(data){
+  #1. Check distribution using a histogram
+  hist_plot &lt;- ggplot(aes(data)) +
+    geom_histogram(bins = 13) +
+    labs(title = &quot;Histogram&quot;, x = &quot;Data&quot;, y = &quot;Frequency&quot;)
+  
+  print(hist_plot)
+}</code></pre>
 <p>Responses of interest include: length (UHML), strength (Str),
 micronaire (Mic), uniformity (UI)</p>
+</div>
 </div>
 
 
