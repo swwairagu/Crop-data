@@ -442,7 +442,25 @@ analyze_data <- function(data){
     labs(title = "Histogram", x = "Data", y = "Frequency")
   
   print(hist_plot)
-}
+  
+  #2. Perform log transformation for skewed data
+  log_data <- log(data)
+  
+  #3. Check for normality
+  shapiro_test <- shapiro.test(log_data)
+  print(shapiro_test)
+  
+  #4. Normal Quantile Plot
+  qq_plot <- ggplot(aes(sample = log_data)) +
+    stat_qq_point(size = 2) +
+    stat_qq_line() +
+    stat_qq_band(alpha = 0.5) +
+    labs(title = "Normal Quantile Plot", x = "Theoretical Quantiles" , y = "Sample Quantiles")
+  
+  print(qq_plot)
+
+  
+  }
 ```
 
 
