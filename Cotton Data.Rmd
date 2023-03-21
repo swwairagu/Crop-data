@@ -442,14 +442,15 @@ analyze_data <- function(data, column_name){
     geom_histogram(bins = 13) +
     labs(title = "Histogram", x = "column_name", y = "Frequency")
   
-  print(hist_plot)
+  return(hist_plot)
   
   #2. Perform log transformation for skewed data
   log_data <- log(data(column_name))
   
   #3. Check for normality
   shapiro_test <- shapiro.test(log_data)
-  print(shapiro_test)
+  
+  return(shapiro_test)
   
   #4. Normal Quantile Plot
   qq_plot <- ggplot(log_data, aes(sample = log_data)) +
@@ -458,7 +459,7 @@ analyze_data <- function(data, column_name){
     stat_qq_band(alpha = 0.5) +
     labs(title = "Normal Quantile Plot", x = "Theoretical Quantiles" , y = "Sample Quantiles")
   
-  print(qq_plot)
+  return(qq_plot)
 
   #5. Perform t-test or Wilcoxon Rank sum test based on Shapiro-Wilk test result
   if (shapiro_test$p-value > 0.05) {
@@ -467,7 +468,8 @@ analyze_data <- function(data, column_name){
   }
   else {
     wilcox <- wilcox_test(data ~ Treatment)      # Perform Wilcoxon Rank Sum test
-    print(wilcox)
+    
+    return(wilcox)
   }
 }
 ```
