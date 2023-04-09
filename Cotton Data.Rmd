@@ -15,7 +15,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 The aim of this research project is to investigate the effect of **iQFORTE**, a plant-based amino acid biostimulant, on cotton. We do this by exploring and analyzing cotton data provided by Matthew Starr of the Department of Crop and Soil Sciences at North Carolina State University.
 
-
 ## Background
 
 A plant biostimulant is any substance or microorganism applied to plants that fosters plant growth and development throughout the crop life cycle from seed germination to planting maturity. Biostimulants achieve this in a number of demonstrated ways such as:
@@ -46,7 +45,6 @@ Plant-based protein hydrolysates (PHs) like iQFORTE have increased in popularity
 
 - Prepare the plant against stress conditions
 
-
 ## Getting Started
 
 We'll use the **tidyverse** package for this analysis. If not previously installed, you can do so by running the following *install.packages* command in the console:
@@ -61,37 +59,35 @@ Next, run the following *library* command to load the tidyverse package:
 library(tidyverse)
 ```
 
-
 ## Data
 
-We can now read in our dataset using the following command:
+We can now read in our data set using the following command:
 
 ```{r load-data, message=FALSE, eval=TRUE}
-cotton_data <- read.csv("data/cotton-data.csv")
+cotton_data <- read_csv("data/cotton-data.csv")
 ```
 
-To view the data in the data viewer, run `View(cotton_data)` in the console. This will pop open a separate window with the data.
+To view the data in the data viewer, run `view(cotton_data)` in the console. This will pop open a separate window with the data.
 
-
-This dataset has `r nrow(cotton_data)` rows and `r ncol(cotton_data)` columns.
-
-Each row represents a unique cotton plant, treatment observation. \
-Each column represents a variable. To get a list of the variables in the data frame, we can use the `names()` function:
+This data set has `r nrow(cotton_data)` rows and `r ncol(cotton_data)` columns. Each row represents a unique cotton plant, treatment observation. Each column represents a variable. To get a list of the variables in the data frame, we can use the `names()` function:
 
 ```{r variable-names}
 names(cotton_data)
 ```
 
-
-I'll rename some of the variables for consistency and to minimize the possibility of errors when using the variable names:
+I'll rename the variables for consistency and to minimize the possibility of errors when using the variable names:
 
 ```{r rename-variables}
 cotton <- cotton_data %>% 
   rename(
-    OpenBollWeight_g = Open.Boll.Weight..g.,
-    OpenBollsperPlant = Open.Bolls.per.Plant,
-    SeedWeight_g = Seed.Weight..g.,
-    LintWeight_g = Lint.Weight..g.
+    OpenBollWeight_g = `Open Boll Weight (g)`,
+    OpenBollsperPlant = `Open Bolls per Plant`,
+    SeedWeight_g = `Seed Weight (g)`,
+    LintWeight_g = `Lint Weight (g)`,
+    Log_OpenBollWeight = `Log-OpenBollWeight`,
+    Log_OpenBollsperPlant = `Log-OpenBollsperPlant`,
+    Log_SeedWeight = `Log-SeedWeight`,
+    Log_LintWeight = `Log-LintWeight`
     )
 ```
 
@@ -101,23 +97,22 @@ cotton <- cotton_data %>%
 names(cotton)
 ```
 
-
 ## Exploratory Data Analysis
 
-### Response: Open Boll Weight
+### Response: Lint Weight
 
-We first examine the distribution of the **open boll weight** of cotton plants in both the control and IQ groups: 
+We first examine the distribution of the lint weight of cotton plants in both the IQ and control groups:
 
-```{r hist-openbollweight, fig.height=5, fig.width=9}
-ggplot(cotton, aes(x = OpenBollWeight_g ,                      # add the data and specify x-axis
-                        fill = Treatment)) +                   # fill color based on treatment group
-  geom_histogram(bins = 15) +                                  # set appropriate histogram bin size 
-  labs(x = "Open boll weight (g)",                             # x-axis label
-       y = "Frequency",                                        # y-axis label
-       title = "Distribution of the Open Boll Weight",         # title of the graph
-       subtitle = "By Treatment Group") +                      # graph subtitle
-  facet_wrap(~ Treatment) +                                    # creates panes based on treatment group
-  theme(legend.position = "none")                              # removes legend
+```{r hist-lintwt, fig.height=5, fig.width=9}
+ggplot(cotton, aes(x = LintWeight_g,                # add the data and specify x-axis
+                   fill = Treatment)) +             # fill color based on treatment group
+  geom_histogram(bins = 14) +                       # set appropriate histogram bin size                     
+  labs(x = "Lint Weight (g)",                       # x-axis label                         
+       y = "Frequency",                             # y-axis label                            
+       title = "Distribution of Lint Weight",       # graph title       
+       subtitle = "By Treatment Group") +           # graph subtitle                
+  facet_wrap(~ Treatment) +                         # creates panes based on treatment group                             
+  theme(legend.position = "none")                   # removes legend
 ```
 
 ```{r n-treatment}
@@ -126,130 +121,41 @@ cotton %>%
   count(Treatment)
 ```
 
+After examining the distribution of the lint weight for the control and IQ groups, it was found that the distribution for the IQ treatment group is *right-skewed* and the sample size is only 20 (not large enough for the Central Limit Theorem to take effect if using a t-test to compare the means of the two groups). To address the non-normality of the IQ treatment group, the natural log of each observation was taken in both treatment groups. The distribution of the log was then examined in each group, and a Shapiro-Wilk test for normality was conducted (where the null hypothesis is the data are normal).
 
-After examining the distribution of the open boll weight for the control and IQ groups, it was found that the distribution for the IQ treatment group is *right-skewed* and the sample size is only 20 (not large enough for the Central Limit Theorem to take effect if using a t-test to compare the means of the two groups).
+##### Log distribution
 
-
-To address the non-normality of the IQ treatment group, the natural log of each observation was taken in both groups, and the distribution of the log of each group was examined and a Shapiro-Wilk test for normality was conducted (where the null hypothesis is the data are normal).
-
-
-##### Shapiro-Wilk Normality Test
-
-```{r shap-wilk-control-log-openbollwt}
-control_data_filtered <- cotton %>%                             # create a data frame with only the controls  
-  filter(Treatment == "Control")                                # filter 
-shapiro.test(control_data_filtered$Log.OpenBollWeight)          # Shapiro-Wilk normality test
-```
-
-```{r shap-wilk-IQ-log-openbollwt}
-IQ_data_filtered <- cotton %>%                                  # create a data frame with IQ observations only 
-  filter(Treatment == "IQ")                                     # filter 
-shapiro.test(IQ_data_filtered$Log.OpenBollWeight)               # Shapiro-Wilk normality test
-```
-
-For the control group, the p-value for the Shapiro-Wilk test was 0.2255 and for the IQ treatment group it was 0.7194. So we don’t have enough evidence to suggest the data are not normal, and we fail to reject the null hypothesis. It appears the log transformation has helped. The normal quantile plot for each group also seems to confirm this.
-
-
-##### Normal Quantile Plots
-
-To create the normal quantile plots, we will use the **qqplotr** package. If not previously installed, you can do so by running the following *install.packages* command in the console:
-
-```{r eval=FALSE}
-install.packages("qqplotr")
-```
-
-Load the qqplotr package:
-
-```{r warning=FALSE, message=FALSE, eval=TRUE}
-library(qqplotr)
-```
-
-We can now create our normal quantile plots:
-
-```{r Q-Q-control}
-ggplot(control_data_filtered, aes(sample = Log.OpenBollWeight)) +
-  stat_qq_point(size = 2) +
-  stat_qq_line() +
-  stat_qq_band(alpha = 0.5) +
-  labs(x = "Theoretical Quantiles" ,
-       y = "Sample Quantiles" ,
-       title = "Control Group Normal Quantile Plot")
-```
-
-```{r Q-Q-IQ}
-ggplot(IQ_data_filtered, aes(sample = Log.OpenBollWeight)) +
-  stat_qq_point(size = 2) +
-  stat_qq_line() +
-  stat_qq_band(alpha = 0.5) +
-  labs(x = "Theoretical Quantiles" ,
-       y = "Sample Quantiles" ,
-       title = " IQ Group Normal Quantile Plot")
-```
-
-Both of the normal quantile plots show that the log transformed data in the two groups are normal.
-
-
-#### Two-sided t-test
-
-We then do a t-test to compare the difference of the means for the two groups using the log transformed observations. For a 2-sided test, the p-value is 0.0142, which suggests that at a significance level of 0.05, we have evidence to suggest the means of the two groups are different. 
-
-```{r t-test-log-openbollwt}
-control_log_openbollwt <- control_data_filtered %>%                 # data frame with control group observations
-  select(Log.OpenBollWeight)
-IQ_log_openbollwt <- IQ_data_filtered %>%                           # data frame with IQ group observations
-  select(Log.OpenBollWeight)
-t.test(control_log_openbollwt, IQ_log_openbollwt, var.equal=TRUE)   # two-sided t-test
-```
-
-#### Visualization
-
-Below are side-by-side box plots visualizing the relationship between open boll weight and the treatment groups:
-
-```{r box-openbollwt, fig.height=7, fig.width=9}
-ggplot(cotton, aes(x = Treatment,
-                   y = OpenBollWeight_g,
+```{r hist-log-lintwt, fig.height=5, fig.width=9}
+ggplot(cotton, aes(x = Log_LintWeight,
                    fill = Treatment)) +
-  geom_boxplot() +
-  labs(x = "Treatment",
-       y = "Open Boll Weight (g)",
-       title = "Open Boll Weight (g) vs. Treatment") +
+  geom_histogram(bins = 13) +                         
+  labs(x = "Log Lint Weight",                             
+       y = "Frequency",                                   
+       title = "Distribution of the Log of Lint Weight",         
+       subtitle = "By Treatment Group") +                      
+  facet_wrap(~ Treatment) +                                    
   theme(legend.position = "none")
 ```
 
-
-### Response: Open Bolls per Plant
-
-We first examine the distribution of open bolls per plant for each treatment group:
-
-```{r hsit-openbollspp, fig.height=5, fig.width=9}
-ggplot(cotton, aes(x = OpenBollsperPlant,
-                   fill = Treatment)) +
-  geom_histogram(bins = 12) +                         
-  labs(x = "Open Bolls per Plant",                             
-       y = "Frequency",                                   
-       title = "Distribution of Open Bolls per Plant",         
-       subtitle = "By Treatment Group") +                      
-  facet_wrap(~ Treatment) +                                    
-  theme(legend.position = "none") 
-```
-
-
-The distribution for the IQ group is *right skewed*, and the sample size is too small to assume Central Limit Theorem will take effect. We therefore take the natural log of each observation in both groups and carry out a Shapiro-Wilk test for normality (where the null hypothesis is the data are normal).
-
 ##### Shapiro-Wilk Normality Test
 
-```{r shap-wilk-control-openbollspp}
-shapiro.test(control_data_filtered$Log.OpenBollsperPlant) 
+```{r shap-wilk-control-log-lintwt}
+control_cotton_filtered <- cotton %>%                           # create a data frame with only the controls  
+  filter(Treatment == "Control")                                # filter
+
+shapiro.test(control_cotton_filtered$Log_LintWeight)            # Shapiro-Wilk normality test
 ```
 
-```{r shap-wilk-IQ-openbollspp}
-shapiro.test(IQ_data_filtered$Log.OpenBollsperPlant)
+```{r shap-wilk-IQ-log-lintwt}
+IQ_cotton_filtered <- cotton %>%                                # create a data frame with IQ observations only 
+  filter(Treatment == "IQ")                                     # filter
+
+shapiro.test(IQ_cotton_filtered$Log_LintWeight)                 # Shapiro-Wilk normality test
 ```
 
-Taking a log transformation for this response variable did not help. It made the distribution of the control group left skewed. Furthermore, for the control group, the p-value for the Shapiro-Wilk test is 0.0351 so we reject the null hypothesis as we do not have enough evidence to suggest the data are normal.
+Taking a log transformation did help, but the distribution of the control group is starting to look left skewed after doing the log transformation. The p-value for the Shapiro-Wilk test for the control group is 0.0562 and 0.995 for the IQ group, so technically we fail to reject that the data are normal at the 0.05 level of significance. However, I am still not comfortable with how left-skewed the control group looks after the log transformation, so doing the Wilcoxon nonparametric test is preferable.
 
-Consequently, a Wilcoxon rank sum test was conducted. The Wilcoxon rank sum test is a non-parametric alternative to the independent two samples t-test for comparing two independent groups, in the situation where the data are not normally distributed. It is also based on ranks, so it is resistant to outliers.  
-
+The Wilcoxon rank sum test is a non-parametric alternative to the independent two samples t-test for comparing two independent groups, in the situation where the data are not normally distributed. It is also based on ranks, so it is resistant to outliers. In a Wilcoxon rank sum test, the null hypothesis is that the two groups being compared come from the same population, and the alternative hypothesis is that the two groups come from different populations.
 
 ##### Wilcoxon Rank Sum Test
 
@@ -267,137 +173,12 @@ library(rstatix)
 
 We can now perform the Wilcoxon Rank Sum test: 
 
-```{r wilcox-openbollspp}
-cotton %>% 
-  wilcox_test(OpenBollsperPlant ~ Treatment)
-```
-
-The p-value for the 2-sided test is 0.0260. So we can conclude that the median open bolls per plant differs for the IQ and control groups.
-
-
-#### Visualization
-
-```{r box-openbollspp, fig.height=7, fig.width=9}
-ggplot(cotton, aes(x = Treatment,
-                   y = OpenBollsperPlant,
-                   fill = Treatment)) +
-  geom_boxplot() +
-  labs(x = "Treatment",
-       y = "Open Bolls per Plant",
-       title = "Open Bolls per Plant vs. Treatment") +
-  theme(legend.position = "none")
-```
-
-
-### Response: Seed Weight
-
-We first examine the distribution of seed weight for each treatment group:
-
-```{r hist-seedwt, fig.height=5, fig.width=9}
-ggplot(cotton, aes(x = SeedWeight_g,
-                   fill = Treatment)) +
-  geom_histogram(bins = 13) +                         
-  labs(x = "Seed Weight (g)",                             
-       y = "Frequency",                                   
-       title = "Distribution of Seed Weight",         
-       subtitle = "By Treatment Group") +                      
-  facet_wrap(~ Treatment) +                                    
-  theme(legend.position = "none")
-```
-
-As with the other responses, the distribution of seed weight for the IQ group is *right skewed*, so a log transformation was applied to the seed weight variable, and the distribution of the log of each group was examined and a Shapiro-Wilk test for normality was conducted (where the null hypothesis is the data are normal). 
-
-##### Shapiro-Wilk Normality Test
-
-```{r shap-wilk-control-seedwt}
-shapiro.test(control_data_filtered$Log.SeedWeight)
-```
-
-```{r shap-wilk-IQ-seedwt}
-shapiro.test(IQ_data_filtered$Log.SeedWeight)
-```
-
-The p-value for the Shapiro-Wilk test for the control group is 0.2148, and for the IQ group it is 0.9993. So we don’t have enough evidence to suggest the data are not normal, and we fail to reject the null hypothesis. It seems the log transformation has helped.
-
-
-#### Two-sided t-test
-
-We then do a t-test to compare the difference of the means for the two groups using the log transformed observations. For a 2-sided test, the p-value is 0.0078, which suggests at a significance level of 0.05, we have evidence to suggest the means of the two groups are different.
-
-```{r t-test-log-seedwt}
-control_log_seedwt <- control_data_filtered %>%                 
-  select(Log.SeedWeight)
-IQ_log_seedwt <- IQ_data_filtered %>%       
-  select(Log.SeedWeight)
-t.test(control_log_seedwt, IQ_log_seedwt, var.equal=TRUE)   
-```
-
-
-#### Visualization
-
-```{r box-seedwt, fig.height=7, fig.width=9}
-ggplot(cotton, aes(x = Treatment,
-                   y = SeedWeight_g,
-                   fill = Treatment)) +
-  geom_boxplot() +
-  labs(x = "Treatment",
-       y = "Seed Weight (g)",
-       title = "Seed Weight (g) vs. Treatment") +
-  theme(legend.position = "none")
-```
-
-
-### Response: Lint Weight
-
-We first examine the distribution of lint weight for each treatment group:
-
-```{r hist-lintwt, fig.height=5, fig.width=9}
-ggplot(cotton, aes(x = LintWeight_g,
-                   fill = Treatment)) +
-  geom_histogram(bins = 14) +                         
-  labs(x = "Lint Weight (g)",                             
-       y = "Frequency",                                   
-       title = "Distribution of Lint Weight",         
-       subtitle = "By Treatment Group") +                      
-  facet_wrap(~ Treatment) +                                    
-  theme(legend.position = "none")
-```
-
-The distribution for the IQ group is *right skewed*, so a log transformation was applied to the lint weight variable, and the distribution of the log of each group was examined and a Shapiro-Wilk test for normality was conducted (where the null hypothesis is the data are normal). 
-
-##### Shapiro-Wilk Normality Test
-
-```{r shap-wilk-control-lintwt}
-shapiro.test(control_data_filtered$Log.LintWeight) 
-```
-
-```{r shap-wilk-IQ-lintwt}
-shapiro.test(IQ_data_filtered$Log.LintWeight) 
-```
-
-```{r hist-log-lintwt, fig.height=5, fig.width=9}
-ggplot(cotton, aes(x = Log.LintWeight,
-                   fill = Treatment)) +
-  geom_histogram(bins = 13) +                         
-  labs(x = "Log Lint Weight",                             
-       y = "Frequency",                                   
-       title = "Distribution of the Log of Lint Weight",         
-       subtitle = "By Treatment Group") +                      
-  facet_wrap(~ Treatment) +                                    
-  theme(legend.position = "none")
-```
-
-Taking a log transformation did help, but the control group distribution after doing the log transformation is starting to look left skewed.  The p-value for the Shapiro-Wilk test for normality is 0.0562, so technically we fail to reject that the data are normal at the 0.05 level of significance. But I am still not comfortable with how left-skewed the control group looks after the transformation, so we will do the Wilcoxon nonparametric test instead.
-
-##### Wilcoxon Rank Sum Test
-
 ```{r wilcox-lintwt}
 cotton %>% 
   wilcox_test(LintWeight_g ~ Treatment)
 ```
 
-The p-value for the normal approximation is 0.0103, which is significant at the 0.05 level. We can conclude that there is a significant difference in the location of the two distributions, and the median lint weight differs for the control and IQ groups.
-
+The p-value of the Wilcoxon Rank Sum test is 0.0103, indicating significant evidence to reject the null hypothesis of the two groups coming from the same population. Therefore, we can conclude that the location of the two distributions differs significantly. Specifically, in the context of comparing lint weight between two groups, we can interpret the result as suggesting a difference in median lint weight between the groups.
 
 #### Visualization
 
@@ -408,7 +189,138 @@ ggplot(cotton, aes(x = Treatment,
   geom_boxplot() +
   labs(x = "Treatment",
        y = "Lint Weight (g)",
-       title = "Lint Weight (g) vs. Treatment") +
+       title = "Distribution of Lint Weight by Treatment") +
+  theme(legend.position = "none")
+```
+
+## Functions
+
+Since the steps in this analysis are repeated across different variables, writing functions is more efficient:
+
+```{r function-histogram}
+distribution <- function(data, col){
+  data %>% 
+    ggplot(aes(x = .data[[col]],
+               fill = Treatment)) +
+    geom_histogram(bins = 15) +
+    labs(x = col, y = "Frequency", title = "Distribution", subtitle = "By Treatment Group") +
+    facet_wrap(~ Treatment) +
+    theme(legend.position = "none")
+}
+```
+
+```{r function-shapiro}
+shapiro <- function(data, col){
+  result <- shapiro.test(data[[col]])
+  return(result)
+}
+```
+
+```{r function-qqplot, warning=FALSE, message=FALSE, eval=TRUE}
+library(qqplotr)
+qqplot <- function(data, col){
+  ggplot(data, aes(sample = .data[[col]])) +
+  stat_qq_point(size = 2) +
+  stat_qq_line(col = "orange") +
+  labs(x = "Theoretical Quantiles",
+       y = "Sample Quantiles" ,
+       title = "Normal Quantile Plot")
+}
+```
+
+```{r function-test}
+# Perform t-test or Wilcoxon Rank sum test based on Shapiro-Wilk test result
+test <- function(data1, data2, col){
+  
+  result1 <- shapiro.test(data1[[col]])
+  result2 <- shapiro.test(data2[[col]])
+  
+  if (result1$p.value > 0.05 & result2$p.value > 0.05) {
+    t_test <- t.test(data1[[col]], data2[[col]], var.equal=TRUE)  
+    print(t_test)
+  }
+  else {
+    wilcox <- wilcox_test(as.formula(paste(col, "~ Treatment")), data = rbind(data1, data2))     
+    return(wilcox)
+  }
+}
+```
+
+### Response: Open Boll Weight
+
+```{r openbollwt}
+distribution(cotton, col = "OpenBollWeight_g")
+shapiro(control_cotton_filtered, col = "OpenBollWeight_g" )
+shapiro(IQ_cotton_filtered, col = "OpenBollWeight_g")
+qqplot(control_cotton_filtered, col = "OpenBollWeight_g")
+qqplot(IQ_cotton_filtered, col = "OpenBollWeight_g")
+test(control_cotton_filtered, IQ_cotton_filtered, col = "OpenBollWeight_g")
+```
+
+The p-value for the Wilcoxon Rank Sum test is 0.035. Therefore we can conclude that the location of the two distributions differs significantly, and that there is a significant difference in the median open boll weight between the IQ and control groups.
+
+#### Visualization
+
+```{r box-openbollwt, fig.height=7, fig.width=9}
+ggplot(cotton, aes(x = Treatment,
+                   y = OpenBollWeight_g,
+                   fill = Treatment)) +
+  geom_boxplot() +
+  labs(x = "Treatment",
+       y = "Open Boll Weight (g)",
+       title = "Distribution of Open Boll Weight by Treatment") +
+  theme(legend.position = "none")
+```
+
+### Response: Open Bolls per Plant
+
+```{r openbollsperplant}
+distribution(cotton, col = "OpenBollsperPlant")
+shapiro(control_cotton_filtered, col = "OpenBollsperPlant" )
+shapiro(IQ_cotton_filtered, col = "OpenBollsperPlant")
+qqplot(control_cotton_filtered, col = "OpenBollsperPlant")
+qqplot(IQ_cotton_filtered, col = "OpenBollsperPlant")
+test(control_cotton_filtered, IQ_cotton_filtered, col = "OpenBollsperPlant")
+```
+
+The p-value for the Wilcoxon Rank Sum test is 0.026. Therefore we can conclude that the location of the two distributions differs significantly, and that there is a significant difference in the median number of open bolls per plant between the IQ and control groups.
+
+#### Visualization
+
+```{r box-openbollspp, fig.height=7, fig.width=9}
+ggplot(cotton, aes(x = Treatment,
+                   y = OpenBollsperPlant,
+                   fill = Treatment)) +
+  geom_boxplot() +
+  labs(x = "Treatment",
+       y = "Open Bolls per Plant",
+       title = "Distribution of Number of Open Bolls per Plant by Treatment") +
+  theme(legend.position = "none")
+```
+
+### Response: Seed Weight
+
+```{r seedwt}
+distribution(cotton, col = "SeedWeight_g")
+shapiro(control_cotton_filtered, col = "SeedWeight_g" )
+shapiro(IQ_cotton_filtered, col = "SeedWeight_g")
+qqplot(control_cotton_filtered, col = "SeedWeight_g")
+qqplot(IQ_cotton_filtered, col = "SeedWeight_g")
+test(control_cotton_filtered, IQ_cotton_filtered, col = "SeedWeight_g")
+```
+
+The p-value for the Wilcoxon Rank Sum test is 0.0155. Therefore we can conclude that the location of the two distributions differs significantly, and that there is a significant difference in the median seed weight between the IQ and control groups.
+
+#### Visualization
+
+```{r box-seedwt, fig.height=7, fig.width=9}
+ggplot(cotton, aes(x = Treatment,
+                   y = SeedWeight_g,
+                   fill = Treatment)) +
+  geom_boxplot() +
+  labs(x = "Treatment",
+       y = "Seed Weight (g)",
+       title = "Distribution of Seed Weight by Treatment") +
   theme(legend.position = "none")
 ```
 
@@ -420,68 +332,72 @@ First, we read in the cotton lint quality data:
 lint_data <- read.csv("data/lint-quality-data.csv")
 ```
 
-This dataset has `r nrow(lint_data)` rows and `r ncol(lint_data)` columns.
-
-Each row represents a unique cotton plant, treatment observation. \
-Each column represents a variable. To get a list of the variables in the data frame, we use the `names()` function:
+This dataset has `r nrow(lint_data)` rows and `r ncol(lint_data)` columns. Each row represents a unique cotton plant, treatment observation. Each column represents a variable. To get a list of the variables in the data frame, we use the `names()` function:
 
 ```{r lint-var}
 names(lint_data)
 ```
+I will rename the "Uniformity.Index" variable for consistency with variable naming:
 
-To analyze the lint quality data, we will follow the steps used in the analysis of the cotton data above. To streamline the analysis pipeline, we will need to write a function that takes a numeric vector as input and performs the steps of the analysis.
+```{r}
+lint_data <- lint_data %>% 
+  rename(UniformityIndex = "Uniformity.Index")
 
+names(lint_data)
+```
+##### Filtering Data by Treatment Groups
 
-### Function 
-
-```{r function}
-analyze_data <- function(data, column_name){
- 
-  #1. Check distribution using a histogram
-  hist_plot <- ggplot(data, aes(x = column_name)) +
-    geom_histogram(bins = 13) +
-    labs(title = "Histogram", x = "column_name", y = "Frequency")
-  
-  return(hist_plot)
-  
-  #2. Perform log transformation for skewed data
-  log_data <- log(data(column_name))
-  
-  #3. Check for normality
-  shapiro_test <- shapiro.test(log_data)
-  
-  return(shapiro_test)
-  
-  #4. Normal Quantile Plot
-  qq_plot <- ggplot(log_data, aes(sample = log_data)) +
-    stat_qq_point(size = 2) +
-    stat_qq_line() +
-    stat_qq_band(alpha = 0.5) +
-    labs(title = "Normal Quantile Plot", x = "Theoretical Quantiles" , y = "Sample Quantiles")
-  
-  return(qq_plot)
-
-  #5. Perform t-test or Wilcoxon Rank sum test based on Shapiro-Wilk test result
-  if (shapiro_test$p-value > 0.05) {
-    t_test <- t.test(log_data, var.equal=TRUE)   # Perform t-test
-    print(t_test)
-  }
-  else {
-    wilcox <- wilcox_test(data ~ Treatment)      # Perform Wilcoxon Rank Sum test
-    
-    return(wilcox)
-  }
-}
+```{r filter-lint}
+control_lint_data <- lint_data %>%
+  filter(Treatment == "Control")  
+IQ_lint_data <- lint_data %>%                               
+  filter(Treatment == "IQ")  
 ```
 
+### Response: Length (UHML)
 
-```{r call_function}
-#analyze_data(lint_data, "UHML")
+```{r length}
+distribution(lint_data, col = "UHML")
+shapiro(control_lint_data, col = "UHML" )
+shapiro(IQ_lint_data, col = "UHML")
+qqplot(control_lint_data, col = "UHML")
+qqplot(IQ_lint_data, col = "UHML")
+test(control_lint_data, IQ_lint_data, col = "UHML")
 ```
 
+### Response: Strength
 
+```{r strength}
+distribution(lint_data, col = "Strength")
+shapiro(control_lint_data, col = "Strength" )
+shapiro(IQ_lint_data, col = "Strength")
+qqplot(control_lint_data, col = "Strength")
+qqplot(IQ_lint_data, col = "Strength")
+test(control_lint_data, IQ_lint_data, col = "Strength")
+```
 
-Responses of interest include: length (UHML), strength (Str), micronaire (Mic), uniformity (UI)
+### Response: Micronaire
+
+```{r micronaire}
+distribution(lint_data, col = "Micronaire")
+shapiro(control_lint_data, col = "Micronaire" )
+shapiro(IQ_lint_data, col = "Micronaire")
+qqplot(control_lint_data, col = "Micronaire")
+qqplot(IQ_lint_data, col = "Micronaire")
+test(control_lint_data, IQ_lint_data, col = "Micronaire")
+```
+
+### Response: Uniformity Index
+
+```{r UI}
+distribution(lint_data, col = "UniformityIndex")
+shapiro(control_lint_data, col = "UniformityIndex" )
+shapiro(IQ_lint_data, col = "UniformityIndex")
+qqplot(control_lint_data, col = "UniformityIndex")
+qqplot(IQ_lint_data, col = "UniformityIndex")
+test(control_lint_data, IQ_lint_data, col = "UniformityIndex")
+```
+
 
 
 
