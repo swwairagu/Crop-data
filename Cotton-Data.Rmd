@@ -1,0 +1,485 @@
+---
+title: "Cotton Data Analysis"
+author: "Stephanie Wairagu"
+date: "2/1/2023"
+output:
+  html_document:
+    theme: cerulean
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Background
+
+A plant biostimulant is any substance or microorganism applied to plants that fosters plant growth and development throughout the crop life cycle from seed germination to planting maturity. Biostimulants achieve this in a number of demonstrated ways such as:
+
+- Improving the efficiency of the plant's metabolism to induce yield increases and enhanced crop quality
+
+- Increasing plant tolerance to and recovery from abiotic stresses
+
+- Facilitating nutrient assimilation, translocation, and use
+
+- Enhancing quality attributes of products, including sugar content, color, fruit seeding, etc.
+
+- Rendering water use more efficient
+
+- Enhancing soil fertility, particularly by fostering the development of complementary soil microorganisms
+
+Plant-based protein hydrolysates (PHs) like **iQFORTE** have increased in popularity because of their potential to increase the germination, productivity and quality of a wide range of horticultural and agronomic crops while minimizing the need for fertilizers. iQFORTE contains oligopeptides and free amino acids as active materials and specifically works to:
+
+- Strengthen the root system
+
+- Enhance nutrients uptake, transport, and mobilization of minerals
+
+- Stimulate the vegetative growth
+
+- Enhance uniformity of flowering and fruiting
+
+- Improve the quality parameters of fruits
+
+- Prepare the plant against stress conditions
+
+
+## Objective
+
+The aim of this research project is to investigate the effect of iQFORTE, a plant-based amino acid biostimulant, on cotton. 
+
+## Getting Started
+
+We'll use the `tidyverse` package for this analysis. If not previously installed, you can do so by running the following `install.packages` command in the console:
+
+```{r install-package, eval=FALSE}
+install.packages("tidyverse")
+```
+
+Next, run the following `library` function to load the package:
+
+```{r load-package, message=FALSE, eval=TRUE}
+library(tidyverse)
+```
+
+## Data
+
+The cotton data we will be using for this analysis has been provided by Matthew Starr of the Department of Crop and Soil Sciences at North Carolina State University.
+
+We start by reading in the dataset using the following command:
+
+```{r load-data, message=FALSE, eval=TRUE}
+cotton <- read_csv("data/cotton-data.csv")
+```
+
+To view the data in the data viewer, run `view(cotton)` in the console. This will pop open a separate window with the data. The dataset has `r nrow(cotton)` rows and `r ncol(cotton)` columns. Each row represents a unique cotton plant, treatment observation. Each column represents a variable. To get a list of the variables in the data frame, we can use the `names()` function:
+
+```{r variable-names}
+names(cotton)
+```
+
+I'll rename some of the variables for consistency and to minimize the possibility of errors when using the variable names:
+
+```{r rename-variables}
+cotton <- cotton %>% 
+  rename(
+    OpenBollWeight_g = `Open Boll Weight (g)`,
+    OpenBollsperPlant = `Open Bolls per Plant`,
+    SeedWeight_g = `Seed Weight (g)`,
+    LintWeight_g = `Lint Weight (g)`,
+    Log_OpenBollWeight = `Log-OpenBollWeight`,
+    Log_OpenBollsperPlant = `Log-OpenBollsperPlant`,
+    Log_SeedWeight = `Log-SeedWeight`,
+    Log_LintWeight = `Log-LintWeight`
+    )
+```
+
+#### New variable names
+
+```{r new-var-names}
+names(cotton)
+```
+
+## Exploratory Data Analysis
+
+### Response: Lint Weight
+
+We first examine the distribution of the lint weight of cotton plants in both the IQ and control groups:
+
+```{r hist-lintwt, fig.height=5, fig.width=9}
+ggplot(cotton, aes(x = LintWeight_g,                # add the data and specify x-axis
+                   fill = Treatment)) +             # fill color based on treatment group
+  geom_histogram(bins = 14) +                       # set appropriate histogram bin size                     
+  labs(x = "Lint Weight (g)",                       # x-axis label                         
+       y = "Frequency",                             # y-axis label                            
+       title = "Distribution of Lint Weight",       # graph title       
+       subtitle = "By Treatment Group") +           # graph subtitle                
+  facet_wrap(~ Treatment) +                         # creates panes based on treatment group                             
+  theme(legend.position = "none")                   # removes legend
+```
+
+```{r n-treatment}
+# Check sample sizes by treatment group
+cotton %>%
+  count(Treatment)
+```
+
+The distribution of lint weight for the IQ treatment group is right-skewed and the sample size of the IQ group is only 20 (not large enough for the Central Limit Theorem to take effect if using a t-test to compare the means of the two groups). To address the non-normality of the IQ treatment group, we do a log transformation of the observations in both treatment groups. The distribution of the log is then examined, and a Shapiro-Wilk test for normality conducted (where the null hypothesis is the data are normal).
+
+#### Log distribution
+
+```{r hist-log-lintwt, fig.height=5, fig.width=9}
+ggplot(cotton, aes(x = Log_LintWeight,
+                   fill = Treatment)) +
+  geom_histogram(bins = 13) +                         
+  labs(x = "Log Lint Weight",                             
+       y = "Frequency",                                   
+       title = "Distribution of the Log of Lint Weight",         
+       subtitle = "By Treatment Group") +                      
+  facet_wrap(~ Treatment) +                                    
+  theme(legend.position = "none")
+```
+
+#### Shapiro-Wilk Normality Test
+
+```{r shap-wilk-control-log-lintwt}
+control_cotton_filtered <- cotton %>%                           # create a data frame with only the controls  
+  filter(Treatment == "Control")                                # filter
+
+shapiro.test(control_cotton_filtered$Log_LintWeight)            # Shapiro-Wilk normality test
+```
+
+```{r shap-wilk-IQ-log-lintwt}
+IQ_cotton_filtered <- cotton %>%                                # create a data frame with IQ observations only 
+  filter(Treatment == "IQ")                                     # filter
+
+shapiro.test(IQ_cotton_filtered$Log_LintWeight)                 # Shapiro-Wilk normality test
+```
+
+Taking a log transformation did improve the distribution of the IQ group, but the distribution of the control group started to look left skewed. This is a common problem with using a log transformation because what was once a unimodal and symmetric distribution may end up looking left skewed after the transformation. The Shapiro Wilk test provided a p-value of 0.0562 for the control group and 0.995 for the IQ group, so technically we fail to reject that the data are normal at the 0.05 level of significance. However, I am still uneasy with how left-skewed the control group appears after the log transformation. Therefore, it would be preferable to use a nonparametric test.
+
+### Nonparametric tests
+
+Hypothesis tests can be classified into two types: parametric and nonparametric tests. Parametric tests are based on certain assumptions such as normality of data, equal variance, and independence. However, in situations where these assumptions are not met, nonparametric tests are preferred. Nonparametric tests are a type of robust test that does not rely on any assumptions about the underlying distribution of the data, making them useful when the data does not follow the assumptions of parametric tests. For instance, nonparametric tests are preferred when the sample size is small and we cannot assume that the distribution of the outcome is normal. For this analysis, we will use the nonparametric Wilcoxon Rank Sum test.
+
+### Wilcoxon Rank Sum Test
+
+The Wilcoxon rank sum test is a non-parametric alternative to the independent two samples t-test for comparing two independent groups, in the situation where the outcome is not normally distributed. It is based on ranks making it resistant to outliers. The null hypothesis of a Wilcoxon rank sum test is that the two groups being compared come from the same population, whereas the alternative hypothesis is that the two groups come from different populations. 
+
+
+To perform the Wilcoxon rank sum test, we will use the `rstatix` package. If not previously installed, you can do so by running the following `install.packages` command in the console:
+
+```{r eval=FALSE}
+install.packages("rstatix")
+```
+
+We then load rstatix package: 
+
+```{r warning=FALSE, message=FALSE, eval=TRUE}
+library(rstatix)
+```
+
+We can now perform the Wilcoxon Rank Sum test: 
+
+```{r wilcox-lintwt}
+cotton %>% 
+  wilcox_test(LintWeight_g ~ Treatment)
+```
+
+#### Interpretation
+
+When testing multiple hypotheses simultaneously, there is a high probability of getting a significant result simply due to chance. In such cases, we may need to adjust the alpha level to correct for that. One way to do that is by using the **Bonferroni** correction method. For our cotton analysis, the response variables of most interest are lint weight and seed weight, so m = 2. To calculate the Bonferroni threshold, we do `alpha / m` = 0.05/2 = 0.025. Therefore, we will compare our Wilcoxon test p-values against our new threshold.
+
+
+The p-value of the Wilcoxon Rank Sum test is 0.0103, which is less than the 0.025 level of significance; therefore we reject the null hypothesis that the two treatment groups come from the same population. Specifically, there is enough evidence to suggest a significant difference in the median lint weight between the control and IQ treatment groups.
+
+#### Visualization
+
+```{r box-lintwt, fig.height=7, fig.width=9}
+ggplot(cotton, aes(x = Treatment,
+                   y = LintWeight_g,
+                   fill = Treatment)) +
+  geom_boxplot() +
+  labs(x = "Treatment",
+       y = "Lint Weight (g)",
+       title = "Distribution of Lint Weight by Treatment") +
+  theme(legend.position = "none")
+```
+
+## Functions
+
+Since the steps in this analysis are repeated across several response variables, writing functions is more efficient:
+
+```{r function-histogram}
+distribution <- function(data, col){
+  data %>% 
+    ggplot(aes(x = .data[[col]],
+               fill = Treatment)) +
+    geom_histogram(bins = 15) +
+    labs(x = col, y = "Frequency", title = "Distribution", subtitle = "By Treatment Group") +
+    facet_wrap(~ Treatment) +
+    theme(legend.position = "none")
+}
+```
+
+```{r function-shapiro}
+shapiro <- function(data, col){
+  result <- shapiro.test(data[[col]])
+  return(result)
+}
+```
+
+```{r function-qqplot, warning=FALSE, message=FALSE, eval=TRUE}
+library(qqplotr)
+qqplot <- function(data, col){
+  ggplot(data, aes(sample = .data[[col]])) +
+  stat_qq_point(size = 2) +
+  stat_qq_line(col = "orange") +
+  labs(x = "Theoretical Quantiles",
+       y = "Sample Quantiles" ,
+       title = "Normal Probability Plot")
+}
+```
+
+```{r function-test}
+# Perform t-test or Wilcoxon Rank sum test based on Shapiro-Wilk test result
+test <- function(data1, data2, col){
+  
+  result1 <- shapiro.test(data1[[col]])
+  result2 <- shapiro.test(data2[[col]])
+  
+  if (result1$p.value > 0.05 & result2$p.value > 0.05) {
+    t_test <- t.test(data1[[col]], data2[[col]], var.equal=TRUE)  
+    print(t_test)
+  }
+  else {
+    wilcox <- wilcox_test(as.formula(paste(col, "~ Treatment")), data = rbind(data1, data2))     
+    return(wilcox)
+  }
+}
+```
+
+### Two-sample t-test interpretation
+
+We have already looked at how to interpret the results of a Wilcoxon Rank Sum test. A t-test however is a statistical test used to determine if there is a significant difference between the **means** of two groups. The null hypothesis of a two-sample t-test is that there is no significant difference between the means of two independent groups, while the alternative hypothesis is that there is a significant difference between the means of the two groups being compared. If the p-value is less than the chosen level of significance, it can be concluded that there is a significant difference between the means of the two groups being compared. On the other hand, a p-value greater than the chosen level of significance indicates there is not enough evidence to conclude that the means of the two groups differ significantly.
+
+### Response: Open Boll Weight
+
+```{r openbollwt}
+distribution(cotton, col = "OpenBollWeight_g")
+shapiro(control_cotton_filtered, col = "OpenBollWeight_g" )
+shapiro(IQ_cotton_filtered, col = "OpenBollWeight_g")
+qqplot(control_cotton_filtered, col = "OpenBollWeight_g")
+qqplot(IQ_cotton_filtered, col = "OpenBollWeight_g")
+test(control_cotton_filtered, IQ_cotton_filtered, col = "OpenBollWeight_g")
+```
+
+The p-value of the Wilcoxon Rank Sum test is 0.035, which is greater than the 0.025 level of significance; therefore we fail to reject the null hypothesis that the two treatment groups come from the same population. Specifically, there is not enough evidence to suggest a significant difference in the median open boll weight between the control and IQ treatment groups.
+
+#### Visualization
+
+```{r box-openbollwt, fig.height=7, fig.width=9}
+ggplot(cotton, aes(x = Treatment,
+                   y = OpenBollWeight_g,
+                   fill = Treatment)) +
+  geom_boxplot() +
+  labs(x = "Treatment",
+       y = "Open Boll Weight (g)",
+       title = "Distribution of Open Boll Weight by Treatment") +
+  theme(legend.position = "none")
+```
+
+### Response: Open Bolls per Plant
+
+```{r openbollsperplant}
+distribution(cotton, col = "OpenBollsperPlant")
+shapiro(control_cotton_filtered, col = "OpenBollsperPlant" )
+shapiro(IQ_cotton_filtered, col = "OpenBollsperPlant")
+qqplot(control_cotton_filtered, col = "OpenBollsperPlant")
+qqplot(IQ_cotton_filtered, col = "OpenBollsperPlant")
+test(control_cotton_filtered, IQ_cotton_filtered, col = "OpenBollsperPlant")
+```
+
+The p-value for the Wilcoxon Rank Sum test is 0.026, which is greater than the 0.025 level of significance; therefore we fail to reject the null hypothesis that the two treatment groups come from the same population. Specifically, there is not enough evidence to suggest a significant difference in the median number of open bolls per plant between the IQ and control groups.
+
+#### Visualization
+
+```{r box-openbollspp, fig.height=7, fig.width=9}
+ggplot(cotton, aes(x = Treatment,
+                   y = OpenBollsperPlant,
+                   fill = Treatment)) +
+  geom_boxplot() +
+  labs(x = "Treatment",
+       y = "Open Bolls per Plant",
+       title = "Distribution of Number of Open Bolls per Plant by Treatment") +
+  theme(legend.position = "none")
+```
+
+### Response: Seed Weight
+
+```{r seedwt}
+distribution(cotton, col = "SeedWeight_g")
+shapiro(control_cotton_filtered, col = "SeedWeight_g" )
+shapiro(IQ_cotton_filtered, col = "SeedWeight_g")
+qqplot(control_cotton_filtered, col = "SeedWeight_g")
+qqplot(IQ_cotton_filtered, col = "SeedWeight_g")
+test(control_cotton_filtered, IQ_cotton_filtered, col = "SeedWeight_g")
+```
+
+The p-value for the Wilcoxon Rank Sum test is 0.0155, which is less than the 0.025 level of significance; therefore we reject the null hypothesis that the two treatment groups come from the same population. Specifically, there is enough evidence to suggest a significant difference in the median seed weight between the control and IQ treatment groups.
+
+#### Visualization
+
+```{r box-seedwt, fig.height=7, fig.width=9}
+ggplot(cotton, aes(x = Treatment,
+                   y = SeedWeight_g,
+                   fill = Treatment)) +
+  geom_boxplot() +
+  labs(x = "Treatment",
+       y = "Seed Weight (g)",
+       title = "Distribution of Seed Weight by Treatment") +
+  theme(legend.position = "none")
+```
+
+## Lint Quality Data 
+
+First, we read in the cotton lint quality data:
+
+```{r lint-data, message=FALSE, eval=TRUE}
+lint_data <- read.csv("data/lint-quality-data.csv")
+```
+
+This dataset has `r nrow(lint_data)` rows and `r ncol(lint_data)` columns. Each row represents a unique cotton plant, treatment observation. Each column represents a variable. To get a list of the variables in the data frame, we use the `names()` function:
+
+```{r lint-var}
+names(lint_data)
+```
+I will rename the "Uniformity.Index" variable for consistency in the naming:
+
+```{r}
+lint_data <- lint_data %>% 
+  rename(UniformityIndex = "Uniformity.Index")
+
+names(lint_data)
+```
+
+#### Filtering Data by Treatment Groups
+
+```{r filter-lint}
+control_lint_data <- lint_data %>%
+  filter(Treatment == "Control")  
+IQ_lint_data <- lint_data %>%                               
+  filter(Treatment == "IQ")  
+```
+
+### Response: Length (UHML)
+
+```{r length}
+distribution(lint_data, col = "UHML")
+shapiro(control_lint_data, col = "UHML" )
+shapiro(IQ_lint_data, col = "UHML")
+qqplot(control_lint_data, col = "UHML")
+qqplot(IQ_lint_data, col = "UHML")
+test(control_lint_data, IQ_lint_data, col = "UHML")
+```
+
+The p-value of the two-sample t-test is 0.1, which is greater than the 0.025 level of significance. We conclude that there is not enough evidence to suggest that the mean lint lengths of the control and IQ treatment groups differ significantly.
+
+#### Visualization
+
+```{r box-UHML, fig.height=7, fig.width=9}
+ggplot(lint_data, aes(x = Treatment,
+                      y = UHML,
+                      fill = Treatment)) +
+  geom_boxplot() +
+  labs(x = "Treatment",
+       y = "Length",
+       title = "Distribution of Lint Length by Treatment") +
+  theme(legend.position = "none")
+```
+
+### Response: Strength
+
+```{r strength}
+distribution(lint_data, col = "Strength")
+shapiro(control_lint_data, col = "Strength" )
+shapiro(IQ_lint_data, col = "Strength")
+qqplot(control_lint_data, col = "Strength")
+qqplot(IQ_lint_data, col = "Strength")
+test(control_lint_data, IQ_lint_data, col = "Strength")
+```
+
+The p-value of the Wilcoxon Rank Sum test is 0.5, which is greater than the 0.025 level of significance; therefore we fail to reject the null hypothesis that the two treatment groups come from the same population. Specifically, there is not enough evidence to suggest a significant difference in the mean lint strength between the IQ and control groups.
+
+#### Visualization
+
+```{r box-strength, fig.height=7, fig.width=9}
+ggplot(lint_data, aes(x = Treatment,
+                      y = Strength,
+                      fill = Treatment)) +
+  geom_boxplot() +
+  labs(x = "Treatment",
+       y = "Strength",
+       title = "Distribution of Lint Strength by Treatment") +
+  theme(legend.position = "none")
+```
+
+### Response: Micronaire
+
+```{r micronaire}
+distribution(lint_data, col = "Micronaire")
+shapiro(control_lint_data, col = "Micronaire" )
+shapiro(IQ_lint_data, col = "Micronaire")
+qqplot(control_lint_data, col = "Micronaire")
+qqplot(IQ_lint_data, col = "Micronaire")
+test(control_lint_data, IQ_lint_data, col = "Micronaire")
+```
+
+The p-value of the two-sample t-test is 0.572, which is greater than the 0.025 level of significance. We conclude that there is not enough evidence to suggest that the mean lint micronaire of the control and IQ treatment groups differ significantly.
+
+#### Visualization
+
+```{r box-micronaire, fig.height=7, fig.width=9}
+ggplot(lint_data, aes(x = Treatment,
+                      y = Micronaire,
+                      fill = Treatment)) +
+  geom_boxplot() +
+  labs(x = "Treatment",
+       y = "Micronaire",
+       title = "Distribution of Micronaire by Treatment") +
+  theme(legend.position = "none")
+```
+
+### Response: Uniformity Index
+
+```{r UI}
+distribution(lint_data, col = "UniformityIndex")
+shapiro(control_lint_data, col = "UniformityIndex" )
+shapiro(IQ_lint_data, col = "UniformityIndex")
+qqplot(control_lint_data, col = "UniformityIndex")
+qqplot(IQ_lint_data, col = "UniformityIndex")
+test(control_lint_data, IQ_lint_data, col = "UniformityIndex")
+```
+
+The p-value of the two-sample t-test is 0.2984, which is greater than the 0.025 level of significance. We conclude that there is not enough evidence to suggest that the mean lint uniformity indexes of the control and IQ treatment groups differ significantly.
+
+#### Visualization
+
+```{r box-ui, fig.height=7, fig.width=9}
+ggplot(lint_data, aes(x = Treatment,
+                      y = UniformityIndex,
+                      fill = Treatment)) +
+  geom_boxplot() +
+  labs(x = "Treatment",
+       y = "Uniformity Index",
+       title = "Distribution of Lint Uniformity Index by Treatment") +
+  theme(legend.position = "none")
+```
+
+
+
+
+
+
+
+
+
