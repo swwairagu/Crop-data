@@ -1,0 +1,163 @@
+---
+title: "Soybean Data Analysis"
+author: "Stephanie Wairagu"
+date: '2023-05-05'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(infer)
+```
+
+```{r load-data, message=FALSE, eval=TRUE}
+soybean <- read_csv("data/soybean-data.csv")
+```
+
+To view the data in the data viewer, run `view(soybean)` in the console. This will pop open a separate window with the data. The dataset has `r nrow(soybean)` rows and `r ncol(soybean)` columns. Each row represents a unique soybean plant, treatment observation. Each column represents a variable. 
+
+```{r}
+names(soybean)
+```
+
+```{r rename-variables}
+soybean <- soybean %>% 
+  rename(
+    Sample_ID = `Sample ID`,
+    Treatment_group = `Group (iQ/Control)`,
+    Num_of_Plants = `# of Plants`,
+    Num_of_Pods = `# of Pods`,
+    Num_of_Seeds = `# of Seeds`,
+    Seed_Weight_g = `Weight of Seeds (g)`,
+    Num_of_Pods_pp = `# of Pods / Plant`,
+    Num_of_Seeds_pp = `# of Seeds / Plant`,
+    Seed_Weight_pp = `Weight of Seeds / Plant (g)`,
+    Weight_per_100_seeds = `Weight per 100 seeds`,
+    Oil_content = `Seed Oil Content (%)`,
+    Protein_content = `Seed Protein Content (%)`
+    )
+```
+
+```{r}
+names(soybean)
+```
+
+### Response: Number of Pods
+
+```{r}
+bootstrap_dist_pods <- soybean %>% 
+  specify(formula = Num_of_Pods ~ Treatment_group) %>% 
+  generate(reps = 1000, type = "bootstrap") %>% 
+  calculate(stat = "diff in means", order = c("iQ", "Control"))
+```
+
+```{r}
+percentile_ci_pods <- bootstrap_dist_pods %>% 
+  get_confidence_interval(level = 0.95, type = "percentile")
+percentile_ci_pods
+```
+
+```{r}
+visualize(bootstrap_dist_pods) + 
+  shade_confidence_interval(endpoints = percentile_ci_pods)
+```
+
+```{r}
+obs_diff_means_pods <- soybean %>% 
+  group_by(Treatment_group) %>% 
+  summarize(mean_pods = mean(Num_of_Pods)) %>% 
+  summarize(diff_means = diff(mean_pods)) %>% 
+  pull()
+```
+
+```{r}
+se_ci <- bootstrap_dist_pods %>% 
+  get_confidence_interval(level = 0.95, type = "se", 
+                          point_estimate = obs_diff_means_pods)
+se_ci
+```
+
+```{r}
+visualize(bootstrap_dist_pods) + 
+  shade_confidence_interval(endpoints = se_ci)
+```
+
+### Response: Number of Seeds
+
+```{r}
+bootstrap_dist_seeds <- soybean %>% 
+  specify(formula = Num_of_Seeds ~ Treatment_group) %>% 
+  generate(reps = 1000, type = "bootstrap") %>% 
+  calculate(stat = "diff in means", order = c("iQ", "Control"))
+```
+
+```{r}
+percentile_ci_seeds <- bootstrap_dist_seeds %>% 
+  get_confidence_interval(level = 0.95, type = "percentile")
+percentile_ci_seeds
+```
+
+```{r}
+visualize(bootstrap_dist_seeds) + 
+  shade_confidence_interval(endpoints = percentile_ci_seeds)
+```
+
+### Response: Oil Content
+
+```{r}
+bootstrap_dist_oil <- soybean %>% 
+  specify(formula = Oil_content ~ Treatment_group) %>% 
+  generate(reps = 1000, type = "bootstrap") %>% 
+  calculate(stat = "diff in means", order = c("iQ", "Control"))
+```
+
+```{r}
+percentile_ci_oil <- bootstrap_dist_oil %>% 
+  get_confidence_interval(level = 0.95, type = "percentile")
+percentile_ci_oil
+```
+
+```{r}
+visualize(bootstrap_dist_oil) + 
+  shade_confidence_interval(endpoints = percentile_ci_oil)
+```
+
+
+### Response: Protein Content
+
+```{r}
+bootstrap_dist_protein <- soybean %>% 
+  specify(formula = Protein_content ~ Treatment_group) %>% 
+  generate(reps = 1000, type = "bootstrap") %>% 
+  calculate(stat = "diff in means", order = c("iQ", "Control"))
+```
+
+```{r}
+percentile_ci_protein <- bootstrap_dist_protein %>% 
+  get_confidence_interval(level = 0.95, type = "percentile")
+percentile_ci_protein
+```
+
+```{r}
+visualize(bootstrap_dist_protein) + 
+  shade_confidence_interval(endpoints = percentile_ci_protein)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
